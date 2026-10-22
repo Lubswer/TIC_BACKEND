@@ -93,7 +93,9 @@ export class ProductoMySqlRepository implements IProductoRepository {
       WHERE 1=1
     `;
 
-    if (!filtros?.incluirInactivos) {
+    if (filtros?.soloInactivos) {
+      query += ` AND activo = 0 `;
+    } else if (!filtros?.incluirInactivos) {
       query += ` AND activo = 1 `;
     }
 

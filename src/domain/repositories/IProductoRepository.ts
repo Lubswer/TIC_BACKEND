@@ -3,6 +3,7 @@ import { Producto } from '../entities/Producto.js';
 export interface FiltrosProducto {
   soloDisponibles?: boolean;
   incluirInactivos?: boolean;
+  soloInactivos?: boolean;
 }
 
 export interface IProductoRepository {

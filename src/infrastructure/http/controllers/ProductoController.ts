@@ -45,11 +45,12 @@ export class ProductoController {
 
   listar = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { soloDisponibles, incluirInactivos } = req.query;
+      const { soloDisponibles, incluirInactivos, soloInactivos } = req.query;
 
       const filtros: FiltrosProducto = {};
       if (soloDisponibles === 'true') filtros.soloDisponibles = true;
       if (incluirInactivos === 'true') filtros.incluirInactivos = true;
+      if (soloInactivos === 'true') filtros.soloInactivos = true;
 
       const productos = await this.listarProductosUseCase.ejecutar(filtros);
       res.status(200).json(productos);
