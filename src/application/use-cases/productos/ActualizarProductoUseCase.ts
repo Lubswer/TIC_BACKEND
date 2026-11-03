@@ -1,6 +1,7 @@
 import { IProductoRepository } from '../../../domain/repositories/IProductoRepository.js';
 import { ActualizarProductoDTO, ProductoResumenDTO } from '../../dtos/producto.dto.js';
 import { Producto } from '../../../domain/entities/Producto.js';
+import { CategoriaProducto } from '../../../domain/enums/CategoriaProducto.js';
 
 export class ActualizarProductoUseCase {
   constructor(private productoRepository: IProductoRepository) {}
@@ -23,13 +24,19 @@ export class ActualizarProductoUseCase {
       producto.nombre = nombreLimpio;
     }
 
+    if (dto.categoria !== undefined) {
+      if (!Object.values(CategoriaProducto).includes(dto.categoria)) {
+        throw new Error(`Categoría inválida. Las categorías permitidas son: ${Object.values(CategoriaProducto).join(', ')}.`);
+      }
+      producto.categoria = dto.categoria;
+    }
+
     if (dto.precio !== undefined) {
       if (dto.precio <= 0) {
         throw new Error('El precio del producto debe ser mayor a 0.');
       }
       producto.precio = dto.precio;
     }
-
 
     if (dto.stock !== undefined) {
       if (dto.stock !== null && dto.stock < 0) {
@@ -53,6 +60,7 @@ export class ActualizarProductoUseCase {
     return {
       id: producto.id!,
       nombre: producto.nombre,
+      categoria: producto.categoria,
       descripcion: producto.descripcion,
       imagen_url: producto.imagen_url,
       precio: producto.precio,

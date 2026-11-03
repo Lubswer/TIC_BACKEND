@@ -1,14 +1,18 @@
 import { IProductoRepository } from '../../../domain/repositories/IProductoRepository.js';
 import { Producto } from '../../../domain/entities/Producto.js';
+import { CategoriaProducto } from '../../../domain/enums/CategoriaProducto.js';
 import { CrearProductoDTO, ProductoResumenDTO } from '../../dtos/producto.dto.js';
 
 export class CrearProductoUseCase {
   constructor(private productoRepository: IProductoRepository) {}
 
   async ejecutar(dto: CrearProductoDTO): Promise<ProductoResumenDTO> {
-
     if (!dto.nombre || dto.nombre.trim().length === 0) {
       throw new Error('El nombre del producto es obligatorio.');
+    }
+
+    if (!dto.categoria || !Object.values(CategoriaProducto).includes(dto.categoria)) {
+      throw new Error(`Categoría inválida. Las categorías permitidas son: ${Object.values(CategoriaProducto).join(', ')}.`);
     }
 
     if (dto.precio === undefined || dto.precio === null || dto.precio <= 0) {
@@ -27,23 +31,25 @@ export class CrearProductoUseCase {
       if (productoExistente.activo) {
         throw new Error(`Ya existe un producto activo con el nombre '${nombreLimpio}'.`);
       }
-      //Inactivo
+      // Reactivar producto inactivo con nuevos datos
+      productoExistente.categoria = dto.categoria;
       productoExistente.descripcion = dto.descripcion !== undefined ? dto.descripcion : productoExistente.descripcion;
       productoExistente.imagen_url = dto.imagen_url !== undefined ? dto.imagen_url : productoExistente.imagen_url;
       productoExistente.precio = dto.precio;
       productoExistente.stock = dto.stock !== undefined ? dto.stock : null;
       productoExistente.disponible = dto.disponible !== undefined ? dto.disponible : true;
       productoExistente.producto_temporada = dto.producto_temporada !== undefined ? dto.producto_temporada : false;
-      productoExistente.reactivar(); 
+      productoExistente.reactivar();
 
       const productoActualizado = await this.productoRepository.actualizar(productoExistente);
 
       return this.mapearAResumenDTO(productoActualizado);
     }
 
-    // no existe 
+    // No existe previamente
     const nuevoProducto = new Producto(
       nombreLimpio,
+      dto.categoria,
       dto.precio,
       dto.descripcion ?? null,
       dto.imagen_url ?? null,
@@ -62,6 +68,7 @@ export class CrearProductoUseCase {
     return {
       id: producto.id!,
       nombre: producto.nombre,
+      categoria: producto.categoria,
       descripcion: producto.descripcion,
       imagen_url: producto.imagen_url,
       precio: producto.precio,

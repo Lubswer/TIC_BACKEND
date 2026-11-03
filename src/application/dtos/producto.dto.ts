@@ -1,5 +1,8 @@
+import { CategoriaProducto } from '../../domain/enums/CategoriaProducto.js';
+
 export interface CrearProductoDTO {
   nombre: string;
+  categoria: CategoriaProducto;
   precio: number;
   descripcion?: string | null;
   imagen_url?: string | null;
@@ -10,6 +13,7 @@ export interface CrearProductoDTO {
 
 export interface ActualizarProductoDTO {
   nombre?: string;
+  categoria?: CategoriaProducto;
   precio?: number;
   descripcion?: string | null;
   imagen_url?: string | null;
@@ -22,6 +26,7 @@ export interface ActualizarProductoDTO {
 export interface ProductoResumenDTO {
   id: number;
   nombre: string;
+  categoria: CategoriaProducto;
   descripcion: string | null;
   imagen_url: string | null;
   precio: number;

@@ -2,12 +2,14 @@ import { RowDataPacket, ResultSetHeader } from 'mysql2/promise';
 import { pool } from '../../../config/database.js';
 import { IProductoRepository, FiltrosProducto } from '../../../domain/repositories/IProductoRepository.js';
 import { Producto } from '../../../domain/entities/Producto.js';
+import { CategoriaProducto } from '../../../domain/enums/CategoriaProducto.js';
 
 export class ProductoMySqlRepository implements IProductoRepository {
   
   private mapearFilaAProducto(fila: RowDataPacket): Producto {
     return new Producto(
       fila.nombre,
+      fila.categoria as CategoriaProducto,
       Number(fila.precio),
       fila.descripcion,
       fila.imagen_url,
@@ -24,7 +26,8 @@ export class ProductoMySqlRepository implements IProductoRepository {
   async crear(producto: Producto): Promise<Producto> {
     const query = `
       INSERT INTO producto (
-        nombre, 
+        nombre,
+        categoria,
         descripcion, 
         imagen_url, 
         precio, 
@@ -33,11 +36,12 @@ export class ProductoMySqlRepository implements IProductoRepository {
         producto_temporada,
         activo
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const [resultado] = await pool.execute<ResultSetHeader>(query, [
       producto.nombre,
+      producto.categoria,
       producto.descripcion ?? null,
       producto.imagen_url ?? null,
       producto.precio,
@@ -53,7 +57,7 @@ export class ProductoMySqlRepository implements IProductoRepository {
 
   async buscarPorId(id: number): Promise<Producto | null> {
     const query = `
-      SELECT id, nombre, descripcion, imagen_url, precio, stock, disponible, producto_temporada, activo, fecha_creacion, fecha_actualizacion
+      SELECT id, nombre, categoria, descripcion, imagen_url, precio, stock, disponible, producto_temporada, activo, fecha_creacion, fecha_actualizacion
       FROM producto
       WHERE id = ?
       LIMIT 1
@@ -70,7 +74,7 @@ export class ProductoMySqlRepository implements IProductoRepository {
 
   async buscarPorNombre(nombre: string): Promise<Producto | null> {
     const query = `
-      SELECT id, nombre, descripcion, imagen_url, precio, stock, disponible, producto_temporada, activo, fecha_creacion, fecha_actualizacion
+      SELECT id, nombre, categoria, descripcion, imagen_url, precio, stock, disponible, producto_temporada, activo, fecha_creacion, fecha_actualizacion
       FROM producto
       WHERE nombre = ?
       LIMIT 1
@@ -85,13 +89,13 @@ export class ProductoMySqlRepository implements IProductoRepository {
     return this.mapearFilaAProducto(filas[0]);
   }
 
-
   async listar(filtros?: FiltrosProducto): Promise<Producto[]> {
     let query = `
-      SELECT id, nombre, descripcion, imagen_url, precio, stock, disponible, producto_temporada, activo, fecha_creacion, fecha_actualizacion
+      SELECT id, nombre, categoria, descripcion, imagen_url, precio, stock, disponible, producto_temporada, activo, fecha_creacion, fecha_actualizacion
       FROM producto
       WHERE 1=1
     `;
+    const params: (string | number)[] = [];
 
     if (filtros?.soloInactivos) {
       query += ` AND activo = 0 `;
@@ -103,9 +107,14 @@ export class ProductoMySqlRepository implements IProductoRepository {
       query += ` AND disponible = 1 `;
     }
 
+    if (filtros?.categoria) {
+      query += ` AND categoria = ? `;
+      params.push(filtros.categoria);
+    }
+
     query += ` ORDER BY nombre ASC `;
 
-    const [filas] = await pool.execute<RowDataPacket[]>(query);
+    const [filas] = await pool.execute<RowDataPacket[]>(query, params);
     return filas.map((fila) => this.mapearFilaAProducto(fila));
   }
 
@@ -118,6 +127,7 @@ export class ProductoMySqlRepository implements IProductoRepository {
       UPDATE producto
       SET 
         nombre = ?,
+        categoria = ?,
         descripcion = ?,
         imagen_url = ?,
         precio = ?,
@@ -130,6 +140,7 @@ export class ProductoMySqlRepository implements IProductoRepository {
 
     await pool.execute<ResultSetHeader>(query, [
       producto.nombre,
+      producto.categoria,
       producto.descripcion ?? null,
       producto.imagen_url ?? null,
       producto.precio,
@@ -146,10 +157,11 @@ export class ProductoMySqlRepository implements IProductoRepository {
 
   async eliminar(id: number): Promise<boolean> {
     const query = `
-      UPDATE producto 
-      SET activo = 0 
+      UPDATE producto
+      SET activo = 0, disponible = 0
       WHERE id = ?
     `;
+
     const [resultado] = await pool.execute<ResultSetHeader>(query, [id]);
     return resultado.affectedRows > 0;
   }
@@ -172,11 +184,17 @@ export class ProductoMySqlRepository implements IProductoRepository {
   async actualizarStock(id: number, nuevoStock: number | null): Promise<boolean> {
     const query = `
       UPDATE producto
-      SET stock = ?
+      SET 
+        stock = ?,
+        disponible = CASE 
+          WHEN ? = 0 THEN 0 
+          ELSE disponible 
+        END
       WHERE id = ?
     `;
 
     const [resultado] = await pool.execute<ResultSetHeader>(query, [
+      nuevoStock,
       nuevoStock,
       id,
     ]);

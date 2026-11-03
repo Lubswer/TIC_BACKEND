@@ -18,16 +18,16 @@ export class ProductoController {
 
   crear = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { nombre, precio, descripcion, imagen_url, stock, disponible, producto_temporada } = req.body;
+      const { nombre, categoria, precio, descripcion, imagen_url, stock, disponible, producto_temporada } = req.body;
 
-
-      if (!nombre || precio === undefined || precio === null) {
-        res.status(400).json({ error: 'Nombre y precio son obligatorios para crear un producto.' });
+      if (!nombre || !categoria || precio === undefined || precio === null) {
+        res.status(400).json({ error: 'Nombre, categoría y precio son obligatorios para crear un producto.' });
         return;
       }
 
       const dto: CrearProductoDTO = {
         nombre,
+        categoria,
         precio: Number(precio),
         descripcion,
         imagen_url,
@@ -45,12 +45,15 @@ export class ProductoController {
 
   listar = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { soloDisponibles, incluirInactivos, soloInactivos } = req.query;
+      const { soloDisponibles, incluirInactivos, soloInactivos, categoria } = req.query;
 
       const filtros: FiltrosProducto = {};
       if (soloDisponibles === 'true') filtros.soloDisponibles = true;
       if (incluirInactivos === 'true') filtros.incluirInactivos = true;
       if (soloInactivos === 'true') filtros.soloInactivos = true;
+      if (typeof categoria === 'string' && categoria.trim().length > 0) {
+        filtros.categoria = categoria.trim();
+      }
 
       const productos = await this.listarProductosUseCase.ejecutar(filtros);
       res.status(200).json(productos);

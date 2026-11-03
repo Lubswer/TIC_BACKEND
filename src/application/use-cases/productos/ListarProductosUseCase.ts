@@ -11,6 +11,7 @@ export class ListarProductosUseCase {
     return productos.map((producto: Producto) => ({
       id: producto.id!,
       nombre: producto.nombre,
+      categoria: producto.categoria,
       descripcion: producto.descripcion,
       imagen_url: producto.imagen_url,
       precio: producto.precio,

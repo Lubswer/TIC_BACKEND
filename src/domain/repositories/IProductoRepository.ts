@@ -1,9 +1,11 @@
 import { Producto } from '../entities/Producto.js';
+import { CategoriaProducto } from '../enums/CategoriaProducto.js';
 
 export interface FiltrosProducto {
   soloDisponibles?: boolean;
   incluirInactivos?: boolean;
   soloInactivos?: boolean;
+  categoria?: CategoriaProducto | string;
 }
 
 export interface IProductoRepository {

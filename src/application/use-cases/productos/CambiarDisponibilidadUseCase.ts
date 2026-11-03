@@ -12,11 +12,12 @@ export class CambiarDisponibilidadUseCase {
     }
 
     await this.productoRepository.cambiarDisponibilidad(id, disponible);
-    producto.cambiarDisponibilidad(disponible);
+    producto.disponible = disponible;
 
     return {
       id: producto.id!,
       nombre: producto.nombre,
+      categoria: producto.categoria,
       descripcion: producto.descripcion,
       imagen_url: producto.imagen_url,
       precio: producto.precio,
