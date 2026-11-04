@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { authRouter } from './infrastructure/http/routes/auth.routes.js';
+import usuariosRouter from './infrastructure/http/routes/usuarios.routes.js';
 import { productosRouter } from './infrastructure/http/routes/productos.routes.js';
 import pedidosRouter from './infrastructure/http/routes/pedidos.routes.js';
 
@@ -18,6 +19,7 @@ app.get('/api/pruebitajeje', (req: Request, res: Response) => {
 });
 
 app.use('/api/auth', authRouter);
+app.use('/api/usuarios', usuariosRouter);
 app.use('/api/productos', productosRouter);
 app.use('/api/pedidos', pedidosRouter);
 

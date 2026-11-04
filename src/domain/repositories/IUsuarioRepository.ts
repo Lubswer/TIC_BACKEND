@@ -7,5 +7,9 @@ export interface IUsuarioRepository {
 
   crear(usuario: Usuario): Promise<Usuario>;
 
-  listar(): Promise<Usuario[]>;
+  actualizar(usuario: Usuario): Promise<Usuario>;
+
+  cambiarEstadoActivo(id: number, activo: boolean): Promise<boolean>;
+
+  listar(incluirInactivos?: boolean): Promise<Usuario[]>;
 }

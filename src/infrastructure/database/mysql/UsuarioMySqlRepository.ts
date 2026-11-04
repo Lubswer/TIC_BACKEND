@@ -5,7 +5,6 @@ import { Usuario } from '../../../domain/entities/Usuario.js';
 import { Rol } from '../../../domain/enums/Rol.js';
 
 export class UsuarioMySqlRepository implements IUsuarioRepository {
-  
   private mapearFilaAUsuario(fila: RowDataPacket): Usuario {
     return new Usuario(
       fila.nombre,
@@ -26,7 +25,7 @@ export class UsuarioMySqlRepository implements IUsuarioRepository {
       WHERE email = ?
       LIMIT 1
     `;
-    
+
     const [filas] = await pool.execute<RowDataPacket[]>(query, [email]);
 
     if (filas.length === 0) {
@@ -67,19 +66,60 @@ export class UsuarioMySqlRepository implements IUsuarioRepository {
       usuario.activo ? 1 : 0,
     ]);
 
-    usuario.id = resultado.insertId;
-    return usuario;
+    const usuarioCreado = await this.buscarPorId(resultado.insertId);
+    return usuarioCreado!;
   }
 
-  async listar(): Promise<Usuario[]> {
+  async actualizar(usuario: Usuario): Promise<Usuario> {
+    if (!usuario.id) {
+      throw new Error('No se puede actualizar un usuario sin ID.');
+    }
+
     const query = `
-      SELECT id, nombre, email, password_hash, rol, activo, fecha_creacion, fecha_actualizacion
-      FROM usuario
-      ORDER BY id ASC
+      UPDATE usuario
+      SET nombre = ?, email = ?, password_hash = ?
+      WHERE id = ?
     `;
 
-    const [filas] = await pool.execute<RowDataPacket[]>(query);
+    await pool.execute<ResultSetHeader>(query, [
+      usuario.nombre,
+      usuario.email,
+      usuario.password_hash,
+      usuario.id,
+    ]);
 
+    const actualizado = await this.buscarPorId(usuario.id);
+    return actualizado!;
+  }
+
+  async cambiarEstadoActivo(id: number, activo: boolean): Promise<boolean> {
+    const query = `
+      UPDATE usuario
+      SET activo = ?
+      WHERE id = ?
+    `;
+
+    const [resultado] = await pool.execute<ResultSetHeader>(query, [
+      activo ? 1 : 0,
+      id,
+    ]);
+
+    return resultado.affectedRows > 0;
+  }
+
+  async listar(incluirInactivos: boolean = false): Promise<Usuario[]> {
+    let query = `
+      SELECT id, nombre, email, password_hash, rol, activo, fecha_creacion, fecha_actualizacion
+      FROM usuario
+    `;
+
+    if (!incluirInactivos) {
+      query += ` WHERE activo = 1 `;
+    }
+
+    query += ` ORDER BY nombre ASC `;
+
+    const [filas] = await pool.execute<RowDataPacket[]>(query);
     return filas.map((fila) => this.mapearFilaAUsuario(fila));
   }
 }
