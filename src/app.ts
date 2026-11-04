@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { authRouter } from './infrastructure/http/routes/auth.routes.js';
 import { productosRouter } from './infrastructure/http/routes/productos.routes.js';
+import pedidosRouter from './infrastructure/http/routes/pedidos.routes.js';
 
 export const app = express();
 
@@ -18,7 +19,7 @@ app.get('/api/pruebitajeje', (req: Request, res: Response) => {
 
 app.use('/api/auth', authRouter);
 app.use('/api/productos', productosRouter);
-
+app.use('/api/pedidos', pedidosRouter);
 
 app.use((req: Request, res: Response) => {
   res.status(404).json({
