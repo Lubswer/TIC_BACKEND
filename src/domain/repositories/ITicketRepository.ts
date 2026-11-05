@@ -12,6 +12,7 @@ export interface TicketCocina {
   pedido_id: number;
   estado: EstadoTicket;
   notas_pedido: string | null;
+  descripcion_extras: string | null;
   fecha_creacion: Date;
   fecha_actualizacion: Date;
   items: ItemTicketCocina[];
@@ -24,16 +25,7 @@ export interface ITicketRepository {
 
   actualizarEstado(id: number, nuevoEstado: EstadoTicket): Promise<boolean>;
 
-  /**
-   * Retorna los tickets activos para la pantalla operativa de cocina
-   * (estados 'pendiente' y 'en_preparacion'), ordenados FIFO (los más antiguos primero).
-   */
   listarTicketsActivos(): Promise<TicketCocina[]>;
 
-  /**
-   * Retorna los tickets ya despachados (estado 'listo') para historial y visualización,
-   * ordenados desde el más recientemente terminado.
-   */
   listarTicketsDespachados(limite?: number): Promise<TicketCocina[]>;
 }
-

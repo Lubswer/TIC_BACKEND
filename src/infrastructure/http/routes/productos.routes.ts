@@ -12,7 +12,6 @@ import { Rol } from '../../../domain/enums/Rol.js';
 
 const productosRouter = Router();
 
-
 const productoRepository = new ProductoMySqlRepository();
 
 const crearProductoUseCase = new CrearProductoUseCase(productoRepository);
@@ -29,37 +28,32 @@ const productoController = new ProductoController(
   cambiarDisponibilidadUseCase
 );
 
-
 productosRouter.use(authMiddleware);
 
-// 1. Listar productos (Acceso: admin, caja, cocina)
 productosRouter.get(
   '/',
+  roleMiddleware([Rol.ADMIN, Rol.CAJA, Rol.COCINA]),
   productoController.listar
 );
 
-// 2. Crear producto (Acceso exclusivo: admin)
 productosRouter.post(
   '/',
   roleMiddleware([Rol.ADMIN]),
   productoController.crear
 );
 
-// 3. Actualizar producto (Acceso exclusivo: admin)
 productosRouter.put(
   '/:id',
   roleMiddleware([Rol.ADMIN]),
   productoController.actualizar
 );
 
-// 4. Borrado lógico de producto (Acceso exclusivo: admin)
 productosRouter.delete(
   '/:id',
   roleMiddleware([Rol.ADMIN]),
   productoController.eliminar
 );
 
-// 5. Apagar/Encender disponibilidad rápida (Acceso: admin y cocina)
 productosRouter.patch(
   '/:id/disponibilidad',
   roleMiddleware([Rol.ADMIN, Rol.COCINA]),

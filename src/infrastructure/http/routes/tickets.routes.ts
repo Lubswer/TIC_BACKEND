@@ -19,7 +19,6 @@ const ticketController = new TicketController(
   cambiarEstadoTicketUseCase
 );
 
-// Listar tickets (activos o despachados): Accesible para admin, caja y cocina
 router.get(
   '/',
   authMiddleware,
@@ -27,7 +26,6 @@ router.get(
   ticketController.listar
 );
 
-// Cambiar estado del ticket (en_preparacion / listo): Exclusivo de admin y cocina
 router.patch(
   '/:id/estado',
   authMiddleware,
@@ -36,4 +34,3 @@ router.patch(
 );
 
 export default router;
-

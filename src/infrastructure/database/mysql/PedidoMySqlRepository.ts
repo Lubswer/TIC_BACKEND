@@ -9,7 +9,6 @@ export class PedidoMySqlRepository implements IPedidoRepository {
 
   async crearConLineas(pedido: Pedido, lineas: ProductoPedido[]): Promise<Pedido> {
     return await TransactionManager.ejecutar(async (conexion) => {
-      // 1. Insertar la cabecera del pedido
       const queryPedido = `
         INSERT INTO pedido (
           usuario_id,
@@ -35,7 +34,6 @@ export class PedidoMySqlRepository implements IPedidoRepository {
 
       const pedidoId = resultadoPedido.insertId;
 
-      // 2. Insertar cada línea en producto_pedido y descontar stock si aplica
       const queryLinea = `
         INSERT INTO producto_pedido (
           pedido_id,
@@ -59,7 +57,6 @@ export class PedidoMySqlRepository implements IPedidoRepository {
       `;
 
       for (const linea of lineas) {
-        // Insertar renglón del pedido
         await conexion.execute<ResultSetHeader>(queryLinea, [
           pedidoId,
           linea.producto_id,
@@ -68,7 +65,6 @@ export class PedidoMySqlRepository implements IPedidoRepository {
           linea.notas ?? null,
         ]);
 
-        // Descontar stock atómicamente si el producto maneja stock
         await conexion.execute<ResultSetHeader>(queryDescontarStock, [
           linea.cantidad,
           linea.cantidad,
@@ -76,16 +72,17 @@ export class PedidoMySqlRepository implements IPedidoRepository {
         ]);
       }
 
-      // 3. Crear automáticamente el ticket para la cocina en estado 'pendiente'
       const queryTicket = `
         INSERT INTO ticket (pedido_id, estado)
         VALUES (?, 'pendiente')
       `;
 
-      await conexion.execute<ResultSetHeader>(queryTicket, [pedidoId]);
+      const [resultadoTicket] = await conexion.execute<ResultSetHeader>(queryTicket, [pedidoId]);
 
-      // 4. Retornar el pedido completo reconstruido
       const pedidoCreado = await this.buscarPorIdConConexion(conexion, pedidoId);
+      if (pedidoCreado) {
+        pedidoCreado.ticket_id = resultadoTicket.insertId;
+      }
       return pedidoCreado!;
     });
   }
@@ -108,7 +105,6 @@ export class PedidoMySqlRepository implements IPedidoRepository {
 
     const filaP = filasPedido[0];
 
-    // Buscar las líneas con el nombre legible del producto (JOIN)
     const queryLineas = `
       SELECT pp.id, pp.pedido_id, pp.producto_id, pp.cantidad, pp.precio_unitario, pp.notas, pp.fecha_creacion, p.nombre AS nombre_producto
       FROM producto_pedido pp
@@ -148,10 +144,6 @@ export class PedidoMySqlRepository implements IPedidoRepository {
     );
   }
 
-  /**
-   * Método privado auxiliar que lee el pedido recién creado usando la misma conexión activa
-   * antes de que se confirme el COMMIT.
-   */
   private async buscarPorIdConConexion(conexion: any, id: number): Promise<Pedido | null> {
     const queryPedido = `
       SELECT id, usuario_id, total_productos, total_extras, descripcion_extras, total, tipo_pago, notas, fecha_creacion, fecha_actualizacion
@@ -295,4 +287,3 @@ export class PedidoMySqlRepository implements IPedidoRepository {
     );
   }
 }
-

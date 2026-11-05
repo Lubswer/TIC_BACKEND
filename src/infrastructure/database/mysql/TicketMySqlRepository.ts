@@ -69,6 +69,7 @@ export class TicketMySqlRepository implements ITicketRepository {
         t.fecha_creacion,
         t.fecha_actualizacion,
         p.notas AS notas_pedido,
+        p.descripcion_extras,
         pp.cantidad,
         pp.notas AS notas_producto,
         prod.nombre AS nombre_producto
@@ -85,7 +86,6 @@ export class TicketMySqlRepository implements ITicketRepository {
   }
 
   async listarTicketsDespachados(limite: number = 50): Promise<TicketCocina[]> {
-    // 1. Obtener los IDs de los últimos tickets despachados
     const queryIds = `
       SELECT id 
       FROM ticket 
@@ -102,7 +102,6 @@ export class TicketMySqlRepository implements ITicketRepository {
 
     const ids = filasIds.map((f) => f.id);
 
-    // 2. Traer el detalle completo de esos tickets específicos
     const placeholders = ids.map(() => '?').join(',');
     const queryDetalle = `
       SELECT 
@@ -112,6 +111,7 @@ export class TicketMySqlRepository implements ITicketRepository {
         t.fecha_creacion,
         t.fecha_actualizacion,
         p.notas AS notas_pedido,
+        p.descripcion_extras,
         pp.cantidad,
         pp.notas AS notas_producto,
         prod.nombre AS nombre_producto
@@ -127,10 +127,6 @@ export class TicketMySqlRepository implements ITicketRepository {
     return this.agruparFilasATicketsCocina(filas);
   }
 
-  /**
-   * Método auxiliar privado: agrupa los registros planos del JOIN en una lista
-   * estructurada de TicketCocina con su array de items correspondientes.
-   */
   private agruparFilasATicketsCocina(filas: RowDataPacket[]): TicketCocina[] {
     const mapaTickets = new Map<number, TicketCocina>();
 
@@ -141,6 +137,7 @@ export class TicketMySqlRepository implements ITicketRepository {
           pedido_id: fila.pedido_id,
           estado: fila.estado as EstadoTicket,
           notas_pedido: fila.notas_pedido,
+          descripcion_extras: fila.descripcion_extras,
           fecha_creacion: new Date(fila.fecha_creacion),
           fecha_actualizacion: new Date(fila.fecha_actualizacion),
           items: [],
@@ -159,4 +156,3 @@ export class TicketMySqlRepository implements ITicketRepository {
     return Array.from(mapaTickets.values());
   }
 }
-

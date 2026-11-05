@@ -39,7 +39,6 @@ export class TicketController {
 
       const ticketActualizado = await this.cambiarEstadoTicketUseCase.ejecutar(id, nuevoEstado as EstadoTicket);
 
-      // Notificar en tiempo real por WebSockets que el estado cambió
       SocketService.emitirTicketActualizado({
         ticket_id: ticketActualizado.id!,
         pedido_id: ticketActualizado.pedido_id,
@@ -52,4 +51,3 @@ export class TicketController {
     }
   };
 }
-

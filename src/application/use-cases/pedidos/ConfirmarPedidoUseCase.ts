@@ -3,11 +3,14 @@ import { IProductoRepository } from '../../../domain/repositories/IProductoRepos
 import { Pedido } from '../../../domain/entities/Pedido.js';
 import { ProductoPedido } from '../../../domain/entities/ProductoPedido.js';
 import { CrearPedidoDTO, PedidoResumenDTO } from '../../dtos/pedido.dto.js';
+import { INotificadorCocina } from '../../services/INotificadorCocina.js';
+import { EstadoTicket } from '../../../domain/enums/EstadoTicket.js';
 
 export class ConfirmarPedidoUseCase {
   constructor(
     private pedidoRepository: IPedidoRepository,
-    private productoRepository: IProductoRepository
+    private productoRepository: IProductoRepository,
+    private notificadorCocina?: INotificadorCocina
   ) {}
 
   async ejecutar(dto: CrearPedidoDTO): Promise<PedidoResumenDTO> {
@@ -23,7 +26,6 @@ export class ConfirmarPedidoUseCase {
       throw new Error('El pedido debe incluir al menos un producto.');
     }
 
-    // 1. Validar productos, disponibilidad, stock y calcular totales financieros oficiales
     const lineasProducto: ProductoPedido[] = [];
     let acumuladorTotalProductos = 0;
 
@@ -36,7 +38,6 @@ export class ConfirmarPedidoUseCase {
         throw new Error(`La cantidad del producto ID ${item.producto_id} debe ser mayor a 0.`);
       }
 
-      // Buscar el producto oficial en la base de datos (nunca confiar en precios del frontend)
       const producto = await this.productoRepository.buscarPorId(item.producto_id);
 
       if (!producto || !producto.activo) {
@@ -67,11 +68,9 @@ export class ConfirmarPedidoUseCase {
       );
     }
 
-    // 2. Procesar cobros extras fuera de carta
     const totalExtras = dto.total_extras && dto.total_extras > 0 ? Number(Number(dto.total_extras).toFixed(2)) : 0;
     const totalGeneral = Number((acumuladorTotalProductos + totalExtras).toFixed(2));
 
-    // 3. Crear entidad Pedido
     const nuevoPedido = new Pedido(
       dto.usuario_id,
       acumuladorTotalProductos,
@@ -82,10 +81,29 @@ export class ConfirmarPedidoUseCase {
       dto.notas ? dto.notas.trim() : null
     );
 
-    // 4. Persistir atómicamente en la base de datos (pedido + lineas + ticket + descuento stock)
     const pedidoCreado = await this.pedidoRepository.crearConLineas(nuevoPedido, lineasProducto);
 
-    // 5. Mapear a DTO de respuesta
+    if (this.notificadorCocina && pedidoCreado.id && pedidoCreado.ticket_id) {
+      try {
+        this.notificadorCocina.notificarNuevoTicket({
+          ticket_id: pedidoCreado.ticket_id,
+          pedido_id: pedidoCreado.id,
+          estado: EstadoTicket.PENDIENTE,
+          notas_pedido: pedidoCreado.notas,
+          descripcion_extras: pedidoCreado.descripcion_extras,
+          fecha_creacion: pedidoCreado.fecha_creacion || new Date(),
+          fecha_actualizacion: pedidoCreado.fecha_actualizacion || new Date(),
+          items: (pedidoCreado.lineas || []).map((l) => ({
+            producto: l.nombre_producto || `Producto #${l.producto_id}`,
+            cantidad: l.cantidad,
+            notas: l.notas ?? null,
+          })),
+        });
+      } catch (notifError) {
+        console.error('Error no bloqueante al notificar a cocina:', notifError);
+      }
+    }
+
     return {
       id: pedidoCreado.id!,
       usuario_id: pedidoCreado.usuario_id,
@@ -108,4 +126,3 @@ export class ConfirmarPedidoUseCase {
     };
   }
 }
-

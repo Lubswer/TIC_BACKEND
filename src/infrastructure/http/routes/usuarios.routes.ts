@@ -22,7 +22,6 @@ const usuarioController = new UsuarioController(
   eliminarUsuarioUseCase
 );
 
-// Todas las rutas de gestión de usuarios son exclusivas del Administrador
 router.use(authMiddleware, roleMiddleware([Rol.ADMIN]));
 
 router.get('/', usuarioController.listar);
@@ -30,4 +29,3 @@ router.put('/:id', usuarioController.actualizar);
 router.delete('/:id', usuarioController.eliminar);
 
 export default router;
-

@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { ENV } from '../../config/env.js';
 import { Rol } from '../../domain/enums/Rol.js';
 import { TicketCocina } from '../../domain/repositories/ITicketRepository.js';
+import { INotificadorCocina } from '../../application/services/INotificadorCocina.js';
 
 interface UsuarioSocketPayload {
   id: number;
@@ -12,13 +13,10 @@ interface UsuarioSocketPayload {
   rol: Rol;
 }
 
-export class SocketService {
+export class SocketService implements INotificadorCocina {
   private static io: SocketIOServer | null = null;
   public static readonly SALA_COCINA = 'sala_cocina';
 
-  /**
-   * Inicializa la instancia de Socket.io acoplándola al servidor HTTP nativo.
-   */
   static inicializar(servidorHttp: HttpServer): void {
     if (this.io) {
       return;
@@ -31,7 +29,6 @@ export class SocketService {
       },
     });
 
-    // Middleware de autenticación para WebSockets vía JWT
     this.io.use((socket: Socket, next) => {
       try {
         const authHeader = (socket.handshake.headers?.authorization as string) || '';
@@ -53,36 +50,28 @@ export class SocketService {
       }
     });
 
-    // Manejo de eventos de conexión
     this.io.on('connection', (socket: Socket) => {
       const usuario: UsuarioSocketPayload = (socket as any).usuario;
 
-      // Si el usuario conectado tiene rol cocina o admin, se une a la sala operativa de cocina
       if (usuario.rol === Rol.COCINA || usuario.rol === Rol.ADMIN) {
         socket.join(this.SALA_COCINA);
       }
 
-      socket.on('disconnect', () => {
-        // Desconexión limpia
-      });
+      socket.on('disconnect', () => {});
     });
   }
 
-  /**
-   * Emite el evento en vivo 'ticket_nuevo' exclusivamente hacia la sala de cocina.
-   */
+  notificarNuevoTicket(ticket: TicketCocina): void {
+    SocketService.emitirTicketNuevo(ticket);
+  }
+
   static emitirTicketNuevo(ticket: TicketCocina): void {
     if (!this.io) return;
     this.io.to(this.SALA_COCINA).emit('ticket_nuevo', ticket);
   }
 
-  /**
-   * Emite el evento 'ticket_actualizado' cuando un ticket cambia de estado
-   * (a 'en_preparacion' o 'listo').
-   */
   static emitirTicketActualizado(data: { ticket_id: number; pedido_id: number; estado: string }): void {
     if (!this.io) return;
     this.io.emit('ticket_actualizado', data);
   }
 }
-

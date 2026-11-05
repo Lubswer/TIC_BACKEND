@@ -5,7 +5,6 @@ import { SocketService } from './infrastructure/websocket/SocketService.js';
 
 const servidor = http.createServer(app);
 
-// Inicializar Socket.io acoplado al servidor HTTP nativo
 SocketService.inicializar(servidor);
 
 servidor.listen(ENV.PORT, () => {

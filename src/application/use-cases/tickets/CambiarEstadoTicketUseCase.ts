@@ -20,12 +20,9 @@ export class CambiarEstadoTicketUseCase {
       throw new Error(`Ticket con ID ${ticketId} no encontrado.`);
     }
 
-    // Aplica las reglas y transiciones de la máquina de estados en el Dominio
     ticket.cambiarEstado(nuevoEstado);
-
     await this.ticketRepository.actualizarEstado(ticketId, nuevoEstado);
 
     return ticket;
   }
 }
-

@@ -24,14 +24,13 @@ export class CrearProductoUseCase {
     }
 
     const nombreLimpio = dto.nombre.trim();
-
     const productoExistente = await this.productoRepository.buscarPorNombre(nombreLimpio);
 
     if (productoExistente) {
       if (productoExistente.activo) {
         throw new Error(`Ya existe un producto activo con el nombre '${nombreLimpio}'.`);
       }
-      // Reactivar producto inactivo con nuevos datos
+
       productoExistente.categoria = dto.categoria;
       productoExistente.descripcion = dto.descripcion !== undefined ? dto.descripcion : productoExistente.descripcion;
       productoExistente.imagen_url = dto.imagen_url !== undefined ? dto.imagen_url : productoExistente.imagen_url;
@@ -42,11 +41,9 @@ export class CrearProductoUseCase {
       productoExistente.reactivar();
 
       const productoActualizado = await this.productoRepository.actualizar(productoExistente);
-
       return this.mapearAResumenDTO(productoActualizado);
     }
 
-    // No existe previamente
     const nuevoProducto = new Producto(
       nombreLimpio,
       dto.categoria,
@@ -56,11 +53,10 @@ export class CrearProductoUseCase {
       dto.stock ?? null,
       dto.disponible ?? true,
       dto.producto_temporada ?? false,
-      true // activo = true
+      true
     );
 
     const productoGuardado = await this.productoRepository.crear(nuevoProducto);
-
     return this.mapearAResumenDTO(productoGuardado);
   }
 

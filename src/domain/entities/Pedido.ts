@@ -12,6 +12,7 @@ export class Pedido {
   fecha_creacion?: Date;
   fecha_actualizacion?: Date;
   lineas?: ProductoPedido[];
+  ticket_id?: number;
 
   constructor(
     usuario_id: number,
@@ -24,7 +25,8 @@ export class Pedido {
     id?: number,
     fecha_creacion?: Date,
     fecha_actualizacion?: Date,
-    lineas?: ProductoPedido[]
+    lineas?: ProductoPedido[],
+    ticket_id?: number
   ) {
     this.id = id;
     this.usuario_id = usuario_id;
@@ -37,6 +39,7 @@ export class Pedido {
     this.fecha_creacion = fecha_creacion;
     this.fecha_actualizacion = fecha_actualizacion;
     this.lineas = lineas;
+    this.ticket_id = ticket_id;
   }
 }
 

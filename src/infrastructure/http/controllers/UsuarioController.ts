@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { RequestAutenticado } from '../middlewares/authMiddleware.js';
 import { ListarUsuariosUseCase } from '../../../application/use-cases/usuarios/ListarUsuariosUseCase.js';
 import { ActualizarUsuarioUseCase } from '../../../application/use-cases/usuarios/ActualizarUsuarioUseCase.js';
 import { EliminarUsuarioUseCase } from '../../../application/use-cases/usuarios/EliminarUsuarioUseCase.js';
@@ -38,10 +39,15 @@ export class UsuarioController {
     }
   };
 
-  eliminar = async (req: Request, res: Response): Promise<void> => {
+  eliminar = async (req: RequestAutenticado, res: Response): Promise<void> => {
     try {
       const id = Number(req.params.id);
-      const usuarioAutenticadoId = (req as any).usuario?.id;
+      const usuarioAutenticadoId = req.usuario?.id;
+
+      if (!usuarioAutenticadoId) {
+        res.status(401).json({ error: 'No se pudo identificar al usuario administrador desde el token.' });
+        return;
+      }
 
       if (isNaN(id) || id <= 0) {
         res.status(400).json({ error: 'El ID de usuario proporcionado no es válido.' });

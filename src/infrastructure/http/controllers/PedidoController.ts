@@ -1,26 +1,22 @@
 import { Request, Response } from 'express';
+import { RequestAutenticado } from '../middlewares/authMiddleware.js';
 import { ConfirmarPedidoUseCase } from '../../../application/use-cases/pedidos/ConfirmarPedidoUseCase.js';
 import { ConsultarDetallePedidoUseCase } from '../../../application/use-cases/pedidos/ConsultarDetallePedidoUseCase.js';
 import { ListarPedidosPorUsuarioUseCase } from '../../../application/use-cases/pedidos/ListarPedidosPorUsuarioUseCase.js';
 import { CrearPedidoDTO } from '../../../application/dtos/pedido.dto.js';
-import { ITicketRepository } from '../../../domain/repositories/ITicketRepository.js';
-import { SocketService } from '../../websocket/SocketService.js';
-import { EstadoTicket } from '../../../domain/enums/EstadoTicket.js';
 
 export class PedidoController {
   constructor(
     private confirmarPedidoUseCase: ConfirmarPedidoUseCase,
     private consultarDetallePedidoUseCase: ConsultarDetallePedidoUseCase,
-    private listarPedidosPorUsuarioUseCase: ListarPedidosPorUsuarioUseCase,
-    private ticketRepository?: ITicketRepository
+    private listarPedidosPorUsuarioUseCase: ListarPedidosPorUsuarioUseCase
   ) {}
 
-  crear = async (req: Request, res: Response): Promise<void> => {
+  crear = async (req: RequestAutenticado, res: Response): Promise<void> => {
     try {
       const { items, total_extras, descripcion_extras, tipo_pago, notas } = req.body;
 
-      // El usuario responsable se extrae con seguridad del token JWT decodificado en authMiddleware
-      const usuarioId = (req as any).usuario?.id;
+      const usuarioId = req.usuario?.id;
 
       if (!usuarioId) {
         res.status(401).json({ error: 'No se pudo identificar al usuario responsable desde el token.' });
@@ -47,31 +43,6 @@ export class PedidoController {
       };
 
       const pedidoConfirmado = await this.confirmarPedidoUseCase.ejecutar(dto);
-
-      // Emitir ticket en vivo hacia la sala de cocina por WebSockets
-      if (this.ticketRepository && pedidoConfirmado.id) {
-        try {
-          const ticketCreado = await this.ticketRepository.buscarPorPedidoId(pedidoConfirmado.id);
-          if (ticketCreado) {
-            SocketService.emitirTicketNuevo({
-              ticket_id: ticketCreado.id!,
-              pedido_id: pedidoConfirmado.id,
-              estado: ticketCreado.estado,
-              notas_pedido: pedidoConfirmado.notas,
-              fecha_creacion: ticketCreado.fecha_creacion || new Date(),
-              fecha_actualizacion: ticketCreado.fecha_actualizacion || new Date(),
-              items: (pedidoConfirmado.lineas || []).map((l) => ({
-                producto: l.nombre_producto || `Producto #${l.producto_id}`,
-                cantidad: l.cantidad,
-                notas: l.notas ?? null,
-              })),
-            });
-          }
-        } catch (socketErr) {
-          console.error('Error no bloqueante al emitir WebSocket de ticket de cocina:', socketErr);
-        }
-      }
-
       res.status(201).json(pedidoConfirmado);
     } catch (error: any) {
       res.status(400).json({ error: error.message || 'Error al procesar el pedido.' });
