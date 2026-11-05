@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { PedidoMySqlRepository } from '../../database/mysql/PedidoMySqlRepository.js';
 import { ProductoMySqlRepository } from '../../database/mysql/ProductoMySqlRepository.js';
+import { TicketMySqlRepository } from '../../database/mysql/TicketMySqlRepository.js';
 import { ConfirmarPedidoUseCase } from '../../../application/use-cases/pedidos/ConfirmarPedidoUseCase.js';
 import { ConsultarDetallePedidoUseCase } from '../../../application/use-cases/pedidos/ConsultarDetallePedidoUseCase.js';
 import { ListarPedidosPorUsuarioUseCase } from '../../../application/use-cases/pedidos/ListarPedidosPorUsuarioUseCase.js';
@@ -14,6 +15,7 @@ const router = Router();
 // 1. Instanciación de dependencias
 const pedidoRepository = new PedidoMySqlRepository();
 const productoRepository = new ProductoMySqlRepository();
+const ticketRepository = new TicketMySqlRepository();
 
 const confirmarPedidoUseCase = new ConfirmarPedidoUseCase(pedidoRepository, productoRepository);
 const consultarDetallePedidoUseCase = new ConsultarDetallePedidoUseCase(pedidoRepository);
@@ -22,7 +24,8 @@ const listarPedidosPorUsuarioUseCase = new ListarPedidosPorUsuarioUseCase(pedido
 const pedidoController = new PedidoController(
   confirmarPedidoUseCase,
   consultarDetallePedidoUseCase,
-  listarPedidosPorUsuarioUseCase
+  listarPedidosPorUsuarioUseCase,
+  ticketRepository
 );
 
 // 2. Definición de rutas protegidas
