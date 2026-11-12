@@ -7,6 +7,7 @@ export interface ItemPedidoInputDTO {
 export interface CrearPedidoDTO {
   usuario_id: number;
   items: ItemPedidoInputDTO[];
+  extras?: boolean;
   total_extras?: number;
   descripcion_extras?: string | null;
   tipo_pago: string;
@@ -29,6 +30,7 @@ export interface PedidoResumenDTO {
   total_productos: number;
   total_extras: number;
   descripcion_extras: string | null;
+  extras: boolean;
   total: number;
   tipo_pago: string;
   notas: string | null;

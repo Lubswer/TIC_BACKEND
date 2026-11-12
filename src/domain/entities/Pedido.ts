@@ -6,6 +6,7 @@ export class Pedido {
   total_productos: number;
   total_extras: number;
   descripcion_extras: string | null;
+  extras: boolean;
   total: number;
   tipo_pago: string;
   notas: string | null;
@@ -19,6 +20,7 @@ export class Pedido {
     total_productos: number,
     total_extras: number,
     descripcion_extras: string | null,
+    extras: boolean,
     total: number,
     tipo_pago: string,
     notas: string | null = null,
@@ -33,6 +35,7 @@ export class Pedido {
     this.total_productos = total_productos;
     this.total_extras = total_extras;
     this.descripcion_extras = descripcion_extras;
+    this.extras = extras;
     this.total = total;
     this.tipo_pago = tipo_pago;
     this.notas = notas;

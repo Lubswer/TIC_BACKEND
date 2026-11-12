@@ -14,8 +14,14 @@ export class UsuarioController {
 
   listar = async (req: Request, res: Response): Promise<void> => {
     try {
-      const incluirInactivos = req.query.incluirInactivos === 'true';
-      const usuarios = await this.listarUsuariosUseCase.ejecutar(incluirInactivos);
+      const soloActivos = req.query.soloActivos === 'true';
+      const soloInactivos = req.query.soloInactivos === 'true';
+
+      const usuarios = await this.listarUsuariosUseCase.ejecutar({
+        soloActivos: soloActivos ? true : undefined,
+        soloInactivos: soloInactivos ? true : undefined,
+      });
+
       res.status(200).json(usuarios);
     } catch (error: any) {
       res.status(500).json({ error: error.message || 'Error al listar usuarios.' });

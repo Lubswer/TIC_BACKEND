@@ -3,18 +3,20 @@ import { RequestAutenticado } from '../middlewares/authMiddleware.js';
 import { ConfirmarPedidoUseCase } from '../../../application/use-cases/pedidos/ConfirmarPedidoUseCase.js';
 import { ConsultarDetallePedidoUseCase } from '../../../application/use-cases/pedidos/ConsultarDetallePedidoUseCase.js';
 import { ListarPedidosPorUsuarioUseCase } from '../../../application/use-cases/pedidos/ListarPedidosPorUsuarioUseCase.js';
+import { ListarPedidosUseCase } from '../../../application/use-cases/pedidos/ListarPedidosUseCase.js';
 import { CrearPedidoDTO } from '../../../application/dtos/pedido.dto.js';
 
 export class PedidoController {
   constructor(
     private confirmarPedidoUseCase: ConfirmarPedidoUseCase,
     private consultarDetallePedidoUseCase: ConsultarDetallePedidoUseCase,
-    private listarPedidosPorUsuarioUseCase: ListarPedidosPorUsuarioUseCase
+    private listarPedidosPorUsuarioUseCase: ListarPedidosPorUsuarioUseCase,
+    private listarPedidosUseCase: ListarPedidosUseCase
   ) {}
 
   crear = async (req: RequestAutenticado, res: Response): Promise<void> => {
     try {
-      const { items, total_extras, descripcion_extras, tipo_pago, notas } = req.body;
+      const { items, extras, total_extras, descripcion_extras, tipo_pago, notas } = req.body;
 
       const usuarioId = req.usuario?.id;
 
@@ -36,6 +38,7 @@ export class PedidoController {
       const dto: CrearPedidoDTO = {
         usuario_id: usuarioId,
         items,
+        extras: extras !== undefined ? Boolean(extras) : false,
         total_extras: total_extras !== undefined ? Number(total_extras) : 0,
         descripcion_extras: descripcion_extras || null,
         tipo_pago,
@@ -78,6 +81,42 @@ export class PedidoController {
       res.status(200).json(pedidos);
     } catch (error: any) {
       res.status(400).json({ error: error.message || 'Error al listar los pedidos del usuario.' });
+    }
+  };
+
+  listar = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const limite = req.query.limite ? Number(req.query.limite) : 50;
+
+      if (isNaN(limite) || limite <= 0) {
+        res.status(400).json({ error: 'El parámetro limite debe ser un número entero mayor a 0.' });
+        return;
+      }
+
+      const soloExtras = req.query.soloExtras === 'true';
+      const fechaInicio = req.query.fechaInicio as string | undefined;
+      const fechaFin = req.query.fechaFin as string | undefined;
+
+      const regexFecha = /^\d{4}-\d{2}-\d{2}$/;
+      if (fechaInicio && !regexFecha.test(fechaInicio)) {
+        res.status(400).json({ error: 'El formato de fechaInicio debe ser YYYY-MM-DD.' });
+        return;
+      }
+      if (fechaFin && !regexFecha.test(fechaFin)) {
+        res.status(400).json({ error: 'El formato de fechaFin debe ser YYYY-MM-DD.' });
+        return;
+      }
+
+      const pedidos = await this.listarPedidosUseCase.ejecutar({
+        limite,
+        soloExtras: soloExtras ? true : undefined,
+        fechaInicio,
+        fechaFin,
+      });
+
+      res.status(200).json(pedidos);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message || 'Error al listar los pedidos.' });
     }
   };
 }

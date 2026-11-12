@@ -1,5 +1,10 @@
 import { Usuario } from '../entities/Usuario.js';
 
+export interface FiltrosUsuario {
+  soloActivos?: boolean;
+  soloInactivos?: boolean;
+}
+
 export interface IUsuarioRepository {
   buscarPorEmail(email: string): Promise<Usuario | null>;
 
@@ -11,5 +16,5 @@ export interface IUsuarioRepository {
 
   cambiarEstadoActivo(id: number, activo: boolean): Promise<boolean>;
 
-  listar(incluirInactivos?: boolean): Promise<Usuario[]>;
+  listar(filtros?: FiltrosUsuario): Promise<Usuario[]>;
 }

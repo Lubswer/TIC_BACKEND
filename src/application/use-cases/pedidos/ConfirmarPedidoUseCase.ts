@@ -73,14 +73,28 @@ export class ConfirmarPedidoUseCase {
       );
     }
 
-    const totalExtras = dto.total_extras && dto.total_extras > 0 ? Number(Number(dto.total_extras).toFixed(2)) : 0;
+    const tieneExtrasMarcado = Boolean(dto.extras);
+    const montoExtras = dto.total_extras !== undefined ? Number(Number(dto.total_extras).toFixed(2)) : 0;
+    const tieneDescripcion = Boolean(dto.descripcion_extras && dto.descripcion_extras.trim().length > 0);
+
+    if (!tieneExtrasMarcado && (montoExtras > 0 || tieneDescripcion)) {
+      throw new Error('No se pueden enviar montos o descripciones de extras si el campo "extras" no está en true.');
+    }
+
+    if (tieneExtrasMarcado && montoExtras <= 0 && !tieneDescripcion) {
+      throw new Error('Si el campo "extras" está en true, debe especificar un monto en total_extras o una descripcion_extras.');
+    }
+
+    const totalExtras = tieneExtrasMarcado ? montoExtras : 0;
+    const descripcionExtras = tieneExtrasMarcado && dto.descripcion_extras ? dto.descripcion_extras.trim() : null;
     const totalGeneral = Number((acumuladorTotalProductos + totalExtras).toFixed(2));
 
     const nuevoPedido = new Pedido(
       dto.usuario_id,
       acumuladorTotalProductos,
       totalExtras,
-      dto.descripcion_extras ? dto.descripcion_extras.trim() : null,
+      descripcionExtras,
+      tieneExtrasMarcado,
       totalGeneral,
       dto.tipo_pago.trim(),
       dto.notas ? dto.notas.trim() : null
@@ -99,6 +113,7 @@ export class ConfirmarPedidoUseCase {
           total_productos: pedidoCreado.total_productos,
           total_extras: pedidoCreado.total_extras,
           descripcion_extras: pedidoCreado.descripcion_extras,
+          extras: pedidoCreado.extras,
           total: pedidoCreado.total,
           notas_pedido: pedidoCreado.notas,
           fecha_creacion: pedidoCreado.fecha_creacion || new Date(),
@@ -136,6 +151,7 @@ export class ConfirmarPedidoUseCase {
       total_productos: pedidoCreado.total_productos,
       total_extras: pedidoCreado.total_extras,
       descripcion_extras: pedidoCreado.descripcion_extras,
+      extras: pedidoCreado.extras,
       total: pedidoCreado.total,
       tipo_pago: pedidoCreado.tipo_pago,
       notas: pedidoCreado.notas,

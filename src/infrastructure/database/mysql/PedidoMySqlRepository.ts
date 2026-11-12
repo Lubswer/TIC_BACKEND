@@ -1,6 +1,6 @@
 import { RowDataPacket, ResultSetHeader } from 'mysql2/promise';
 import { pool } from '../../../config/database.js';
-import { IPedidoRepository } from '../../../domain/repositories/IPedidoRepository.js';
+import { IPedidoRepository, FiltrosPedido } from '../../../domain/repositories/IPedidoRepository.js';
 import { Pedido } from '../../../domain/entities/Pedido.js';
 import { ProductoPedido } from '../../../domain/entities/ProductoPedido.js';
 import { TransactionManager } from '../TransactionManager.js';
@@ -15,11 +15,12 @@ export class PedidoMySqlRepository implements IPedidoRepository {
           total_productos,
           total_extras,
           descripcion_extras,
+          extras,
           total,
           tipo_pago,
           notas
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
       const [resultadoPedido] = await conexion.execute<ResultSetHeader>(queryPedido, [
@@ -27,6 +28,7 @@ export class PedidoMySqlRepository implements IPedidoRepository {
         pedido.total_productos,
         pedido.total_extras,
         pedido.descripcion_extras ?? null,
+        pedido.extras ? 1 : 0,
         pedido.total,
         pedido.tipo_pago,
         pedido.notas ?? null,
@@ -91,7 +93,7 @@ export class PedidoMySqlRepository implements IPedidoRepository {
     const conexion = pool;
 
     const queryPedido = `
-      SELECT id, usuario_id, total_productos, total_extras, descripcion_extras, total, tipo_pago, notas, fecha_creacion, fecha_actualizacion
+      SELECT id, usuario_id, total_productos, total_extras, descripcion_extras, extras, total, tipo_pago, notas, fecha_creacion, fecha_actualizacion
       FROM pedido
       WHERE id = ?
       LIMIT 1
@@ -134,6 +136,7 @@ export class PedidoMySqlRepository implements IPedidoRepository {
       Number(filaP.total_productos),
       Number(filaP.total_extras),
       filaP.descripcion_extras,
+      Boolean(filaP.extras),
       Number(filaP.total),
       filaP.tipo_pago,
       filaP.notas,
@@ -146,7 +149,7 @@ export class PedidoMySqlRepository implements IPedidoRepository {
 
   private async buscarPorIdConConexion(conexion: any, id: number): Promise<Pedido | null> {
     const queryPedido = `
-      SELECT id, usuario_id, total_productos, total_extras, descripcion_extras, total, tipo_pago, notas, fecha_creacion, fecha_actualizacion
+      SELECT id, usuario_id, total_productos, total_extras, descripcion_extras, extras, total, tipo_pago, notas, fecha_creacion, fecha_actualizacion
       FROM pedido
       WHERE id = ?
       LIMIT 1
@@ -189,6 +192,7 @@ export class PedidoMySqlRepository implements IPedidoRepository {
       Number(filaP.total_productos),
       Number(filaP.total_extras),
       filaP.descripcion_extras,
+      Boolean(filaP.extras),
       Number(filaP.total),
       filaP.tipo_pago,
       filaP.notas,
@@ -201,7 +205,7 @@ export class PedidoMySqlRepository implements IPedidoRepository {
 
   async buscarPorUsuarioId(usuarioId: number): Promise<Pedido[]> {
     const queryPedidos = `
-      SELECT id, usuario_id, total_productos, total_extras, descripcion_extras, total, tipo_pago, notas, fecha_creacion, fecha_actualizacion
+      SELECT id, usuario_id, total_productos, total_extras, descripcion_extras, extras, total, tipo_pago, notas, fecha_creacion, fecha_actualizacion
       FROM pedido
       WHERE usuario_id = ?
       ORDER BY fecha_creacion DESC
@@ -246,6 +250,7 @@ export class PedidoMySqlRepository implements IPedidoRepository {
           Number(filaP.total_productos),
           Number(filaP.total_extras),
           filaP.descripcion_extras,
+          Boolean(filaP.extras),
           Number(filaP.total),
           filaP.tipo_pago,
           filaP.notas,
@@ -260,15 +265,38 @@ export class PedidoMySqlRepository implements IPedidoRepository {
     return pedidos;
   }
 
-  async listar(limite: number = 50): Promise<Pedido[]> {
+  async listar(filtros: FiltrosPedido = {}): Promise<Pedido[]> {
+    const limite = filtros.limite && filtros.limite > 0 ? filtros.limite : 50;
+    const condiciones: string[] = [];
+    const params: any[] = [];
+
+    if (filtros.soloExtras === true) {
+      condiciones.push('extras = 1');
+    }
+
+    if (filtros.fechaInicio) {
+      condiciones.push('fecha_creacion >= ?');
+      params.push(`${filtros.fechaInicio} 00:00:00`);
+    }
+
+    if (filtros.fechaFin) {
+      condiciones.push('fecha_creacion <= ?');
+      params.push(`${filtros.fechaFin} 23:59:59`);
+    }
+
+    const whereClause = condiciones.length > 0 ? `WHERE ${condiciones.join(' AND ')}` : '';
+
     const query = `
-      SELECT id, usuario_id, total_productos, total_extras, descripcion_extras, total, tipo_pago, notas, fecha_creacion, fecha_actualizacion
+      SELECT id, usuario_id, total_productos, total_extras, descripcion_extras, extras, total, tipo_pago, notas, fecha_creacion, fecha_actualizacion
       FROM pedido
+      ${whereClause}
       ORDER BY fecha_creacion DESC
       LIMIT ?
     `;
 
-    const [filas] = await pool.execute<RowDataPacket[]>(query, [String(limite)]);
+    params.push(String(limite));
+
+    const [filas] = await pool.execute<RowDataPacket[]>(query, params);
 
     return filas.map(
       (f) =>
@@ -277,6 +305,7 @@ export class PedidoMySqlRepository implements IPedidoRepository {
           Number(f.total_productos),
           Number(f.total_extras),
           f.descripcion_extras,
+          Boolean(f.extras),
           Number(f.total),
           f.tipo_pago,
           f.notas,

@@ -4,6 +4,7 @@ import { ProductoMySqlRepository } from '../../database/mysql/ProductoMySqlRepos
 import { ConfirmarPedidoUseCase } from '../../../application/use-cases/pedidos/ConfirmarPedidoUseCase.js';
 import { ConsultarDetallePedidoUseCase } from '../../../application/use-cases/pedidos/ConsultarDetallePedidoUseCase.js';
 import { ListarPedidosPorUsuarioUseCase } from '../../../application/use-cases/pedidos/ListarPedidosPorUsuarioUseCase.js';
+import { ListarPedidosUseCase } from '../../../application/use-cases/pedidos/ListarPedidosUseCase.js';
 import { PedidoController } from '../controllers/PedidoController.js';
 import { authMiddleware } from '../middlewares/authMiddleware.js';
 import { roleMiddleware } from '../middlewares/roleMiddleware.js';
@@ -23,11 +24,20 @@ const confirmarPedidoUseCase = new ConfirmarPedidoUseCase(
 );
 const consultarDetallePedidoUseCase = new ConsultarDetallePedidoUseCase(pedidoRepository);
 const listarPedidosPorUsuarioUseCase = new ListarPedidosPorUsuarioUseCase(pedidoRepository);
+const listarPedidosUseCase = new ListarPedidosUseCase(pedidoRepository);
 
 const pedidoController = new PedidoController(
   confirmarPedidoUseCase,
   consultarDetallePedidoUseCase,
-  listarPedidosPorUsuarioUseCase
+  listarPedidosPorUsuarioUseCase,
+  listarPedidosUseCase
+);
+
+router.get(
+  '/',
+  authMiddleware,
+  roleMiddleware([Rol.ADMIN]),
+  pedidoController.listar
 );
 
 router.post(

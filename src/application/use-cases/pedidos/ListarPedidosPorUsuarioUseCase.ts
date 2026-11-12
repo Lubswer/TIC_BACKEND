@@ -17,6 +17,7 @@ export class ListarPedidosPorUsuarioUseCase {
       total_productos: p.total_productos,
       total_extras: p.total_extras,
       descripcion_extras: p.descripcion_extras,
+      extras: p.extras,
       total: p.total,
       tipo_pago: p.tipo_pago,
       notas: p.notas,

@@ -1,6 +1,13 @@
 import { Pedido } from '../entities/Pedido.js';
 import { ProductoPedido } from '../entities/ProductoPedido.js';
 
+export interface FiltrosPedido {
+  limite?: number;
+  soloExtras?: boolean;
+  fechaInicio?: string;
+  fechaFin?: string;
+}
+
 export interface IPedidoRepository {
   crearConLineas(pedido: Pedido, lineas: ProductoPedido[]): Promise<Pedido>;
 
@@ -8,5 +15,5 @@ export interface IPedidoRepository {
 
   buscarPorUsuarioId(usuarioId: number): Promise<Pedido[]>;
 
-  listar(limite?: number): Promise<Pedido[]>;
+  listar(filtros?: FiltrosPedido): Promise<Pedido[]>;
 }

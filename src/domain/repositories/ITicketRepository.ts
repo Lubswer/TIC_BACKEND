@@ -18,6 +18,7 @@ export interface TicketCocina {
   total_productos?: number;
   total_extras?: number;
   descripcion_extras: string | null;
+  extras?: boolean;
   total?: number;
   notas_pedido: string | null;
   fecha_creacion: Date;

@@ -1,11 +1,11 @@
-import { IUsuarioRepository } from '../../../domain/repositories/IUsuarioRepository.js';
+import { IUsuarioRepository, FiltrosUsuario } from '../../../domain/repositories/IUsuarioRepository.js';
 import { UsuarioResumenDTO } from '../../dtos/auth.dto.js';
 
 export class ListarUsuariosUseCase {
   constructor(private usuarioRepository: IUsuarioRepository) {}
 
-  async ejecutar(incluirInactivos: boolean = false): Promise<UsuarioResumenDTO[]> {
-    const usuarios = await this.usuarioRepository.listar(incluirInactivos);
+  async ejecutar(filtros: FiltrosUsuario = {}): Promise<UsuarioResumenDTO[]> {
+    const usuarios = await this.usuarioRepository.listar(filtros);
 
     return usuarios.map((u) => ({
       id: u.id!,

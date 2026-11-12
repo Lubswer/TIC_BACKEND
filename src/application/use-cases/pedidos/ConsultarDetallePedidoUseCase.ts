@@ -21,6 +21,7 @@ export class ConsultarDetallePedidoUseCase {
       total_productos: pedido.total_productos,
       total_extras: pedido.total_extras,
       descripcion_extras: pedido.descripcion_extras,
+      extras: pedido.extras,
       total: pedido.total,
       tipo_pago: pedido.tipo_pago,
       notas: pedido.notas,

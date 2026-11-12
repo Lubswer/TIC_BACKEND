@@ -1,6 +1,6 @@
 import { RowDataPacket, ResultSetHeader } from 'mysql2/promise';
 import { pool } from '../../../config/database.js';
-import { IUsuarioRepository } from '../../../domain/repositories/IUsuarioRepository.js';
+import { IUsuarioRepository, FiltrosUsuario } from '../../../domain/repositories/IUsuarioRepository.js';
 import { Usuario } from '../../../domain/entities/Usuario.js';
 import { Rol } from '../../../domain/enums/Rol.js';
 
@@ -107,14 +107,16 @@ export class UsuarioMySqlRepository implements IUsuarioRepository {
     return resultado.affectedRows > 0;
   }
 
-  async listar(incluirInactivos: boolean = false): Promise<Usuario[]> {
+  async listar(filtros: FiltrosUsuario = {}): Promise<Usuario[]> {
     let query = `
       SELECT id, nombre, email, password_hash, rol, activo, fecha_creacion, fecha_actualizacion
       FROM usuario
     `;
 
-    if (!incluirInactivos) {
+    if (filtros.soloActivos === true) {
       query += ` WHERE activo = 1 `;
+    } else if (filtros.soloInactivos === true) {
+      query += ` WHERE activo = 0 `;
     }
 
     query += ` ORDER BY nombre ASC `;
