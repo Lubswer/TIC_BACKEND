@@ -95,9 +95,22 @@ export class PedidoMySqlRepository implements IPedidoRepository {
     const conexion = pool;
 
     const queryPedido = `
-      SELECT id, usuario_id, total_productos, total_extras, descripcion_extras, extras, total, tipo_pago, notas, fecha_creacion, fecha_actualizacion
-      FROM pedido
-      WHERE id = ?
+      SELECT 
+        p.id, 
+        p.usuario_id, 
+        u.nombre AS usuario_nombre,
+        p.total_productos, 
+        p.total_extras, 
+        p.descripcion_extras, 
+        p.extras, 
+        p.total, 
+        p.tipo_pago, 
+        p.notas, 
+        p.fecha_creacion, 
+        p.fecha_actualizacion
+      FROM pedido p
+      INNER JOIN usuario u ON p.usuario_id = u.id
+      WHERE p.id = ?
       LIMIT 1
     `;
 
@@ -146,15 +159,30 @@ export class PedidoMySqlRepository implements IPedidoRepository {
       filaP.id,
       new Date(filaP.fecha_creacion),
       new Date(filaP.fecha_actualizacion),
-      lineas
+      lineas,
+      undefined,
+      filaP.usuario_nombre
     );
   }
 
   private async buscarPorIdConConexion(conexion: any, id: number): Promise<Pedido | null> {
     const queryPedido = `
-      SELECT id, usuario_id, total_productos, total_extras, descripcion_extras, extras, total, tipo_pago, notas, fecha_creacion, fecha_actualizacion
-      FROM pedido
-      WHERE id = ?
+      SELECT 
+        p.id, 
+        p.usuario_id, 
+        u.nombre AS usuario_nombre,
+        p.total_productos, 
+        p.total_extras, 
+        p.descripcion_extras, 
+        p.extras, 
+        p.total, 
+        p.tipo_pago, 
+        p.notas, 
+        p.fecha_creacion, 
+        p.fecha_actualizacion
+      FROM pedido p
+      INNER JOIN usuario u ON p.usuario_id = u.id
+      WHERE p.id = ?
       LIMIT 1
     `;
 
@@ -203,16 +231,31 @@ export class PedidoMySqlRepository implements IPedidoRepository {
       filaP.id,
       new Date(filaP.fecha_creacion),
       new Date(filaP.fecha_actualizacion),
-      lineas
+      lineas,
+      undefined,
+      filaP.usuario_nombre
     );
   }
 
   async buscarPorUsuarioId(usuarioId: number): Promise<Pedido[]> {
     const queryPedidos = `
-      SELECT id, usuario_id, total_productos, total_extras, descripcion_extras, extras, total, tipo_pago, notas, fecha_creacion, fecha_actualizacion
-      FROM pedido
-      WHERE usuario_id = ?
-      ORDER BY fecha_creacion DESC
+      SELECT 
+        p.id, 
+        p.usuario_id, 
+        u.nombre AS usuario_nombre,
+        p.total_productos, 
+        p.total_extras, 
+        p.descripcion_extras, 
+        p.extras, 
+        p.total, 
+        p.tipo_pago, 
+        p.notas, 
+        p.fecha_creacion, 
+        p.fecha_actualizacion
+      FROM pedido p
+      INNER JOIN usuario u ON p.usuario_id = u.id
+      WHERE p.usuario_id = ?
+      ORDER BY p.fecha_creacion DESC
     `;
 
     const [filasPedidos] = await pool.execute<RowDataPacket[]>(queryPedidos, [usuarioId]);
@@ -262,7 +305,9 @@ export class PedidoMySqlRepository implements IPedidoRepository {
           filaP.id,
           new Date(filaP.fecha_creacion),
           new Date(filaP.fecha_actualizacion),
-          lineas
+          lineas,
+          undefined,
+          filaP.usuario_nombre
         )
       );
     }
@@ -276,26 +321,39 @@ export class PedidoMySqlRepository implements IPedidoRepository {
     const params: any[] = [];
 
     if (filtros.soloExtras === true) {
-      condiciones.push('extras = 1');
+      condiciones.push('p.extras = 1');
     }
 
     if (filtros.fechaInicio) {
-      condiciones.push('fecha_creacion >= ?');
+      condiciones.push('p.fecha_creacion >= ?');
       params.push(`${filtros.fechaInicio} 00:00:00`);
     }
 
     if (filtros.fechaFin) {
-      condiciones.push('fecha_creacion <= ?');
+      condiciones.push('p.fecha_creacion <= ?');
       params.push(`${filtros.fechaFin} 23:59:59`);
     }
 
     const whereClause = condiciones.length > 0 ? `WHERE ${condiciones.join(' AND ')}` : '';
 
     const query = `
-      SELECT id, usuario_id, total_productos, total_extras, descripcion_extras, extras, total, tipo_pago, notas, fecha_creacion, fecha_actualizacion
-      FROM pedido
+      SELECT 
+        p.id, 
+        p.usuario_id, 
+        u.nombre AS usuario_nombre,
+        p.total_productos, 
+        p.total_extras, 
+        p.descripcion_extras, 
+        p.extras, 
+        p.total, 
+        p.tipo_pago, 
+        p.notas, 
+        p.fecha_creacion, 
+        p.fecha_actualizacion
+      FROM pedido p
+      INNER JOIN usuario u ON p.usuario_id = u.id
       ${whereClause}
-      ORDER BY fecha_creacion DESC
+      ORDER BY p.fecha_creacion DESC
       LIMIT ?
     `;
 
@@ -316,7 +374,10 @@ export class PedidoMySqlRepository implements IPedidoRepository {
           f.notas,
           f.id,
           new Date(f.fecha_creacion),
-          new Date(f.fecha_actualizacion)
+          new Date(f.fecha_actualizacion),
+          undefined,
+          undefined,
+          f.usuario_nombre
         )
     );
   }

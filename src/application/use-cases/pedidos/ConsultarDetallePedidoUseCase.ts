@@ -18,6 +18,7 @@ export class ConsultarDetallePedidoUseCase {
     return {
       id: pedido.id!,
       usuario_id: pedido.usuario_id,
+      usuario_nombre: pedido.usuario_nombre,
       total_productos: pedido.total_productos,
       total_extras: pedido.total_extras,
       descripcion_extras: pedido.descripcion_extras,

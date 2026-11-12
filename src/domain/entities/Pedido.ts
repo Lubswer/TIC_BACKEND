@@ -3,6 +3,7 @@ import { ProductoPedido } from './ProductoPedido.js';
 export class Pedido {
   id?: number;
   usuario_id: number;
+  usuario_nombre?: string;
   total_productos: number;
   total_extras: number;
   descripcion_extras: string | null;
@@ -28,10 +29,12 @@ export class Pedido {
     fecha_creacion?: Date,
     fecha_actualizacion?: Date,
     lineas?: ProductoPedido[],
-    ticket_id?: number
+    ticket_id?: number,
+    usuario_nombre?: string
   ) {
     this.id = id;
     this.usuario_id = usuario_id;
+    this.usuario_nombre = usuario_nombre;
     this.total_productos = total_productos;
     this.total_extras = total_extras;
     this.descripcion_extras = descripcion_extras;

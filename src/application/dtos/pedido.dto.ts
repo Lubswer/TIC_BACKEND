@@ -28,6 +28,7 @@ export interface LineaPedidoDetalleDTO {
 export interface PedidoResumenDTO {
   id: number;
   usuario_id: number;
+  usuario_nombre?: string;
   total_productos: number;
   total_extras: number;
   descripcion_extras: string | null;

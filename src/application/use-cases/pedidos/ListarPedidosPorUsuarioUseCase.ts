@@ -14,6 +14,7 @@ export class ListarPedidosPorUsuarioUseCase {
     return pedidos.map((p) => ({
       id: p.id!,
       usuario_id: p.usuario_id,
+      usuario_nombre: p.usuario_nombre,
       total_productos: p.total_productos,
       total_extras: p.total_extras,
       descripcion_extras: p.descripcion_extras,
