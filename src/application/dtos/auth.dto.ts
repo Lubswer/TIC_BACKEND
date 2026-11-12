@@ -11,6 +11,7 @@ export interface ActualizarUsuarioDTO {
   nombre?: string;
   email?: string;
   password?: string;
+  activo?: boolean;
 }
 
 export interface LoginDTO {
@@ -24,6 +25,7 @@ export interface UsuarioResumenDTO {
   email: string;
   rol: Rol;
   activo: boolean;
+  eliminado: boolean;
   fecha_creacion?: Date;
   fecha_actualizacion?: Date;
 }

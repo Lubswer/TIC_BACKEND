@@ -39,6 +39,10 @@ export class ActualizarUsuarioUseCase {
       usuario.password_hash = await Usuario.hashearPassword(dto.password.trim());
     }
 
+    if (dto.activo !== undefined) {
+      usuario.activo = Boolean(dto.activo);
+    }
+
     const actualizado = await this.usuarioRepository.actualizar(usuario);
 
     return {
@@ -47,6 +51,7 @@ export class ActualizarUsuarioUseCase {
       email: actualizado.email,
       rol: actualizado.rol,
       activo: actualizado.activo,
+      eliminado: actualizado.eliminado,
       fecha_creacion: actualizado.fecha_creacion,
       fecha_actualizacion: actualizado.fecha_actualizacion,
     };

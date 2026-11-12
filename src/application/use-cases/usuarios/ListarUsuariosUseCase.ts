@@ -13,6 +13,7 @@ export class ListarUsuariosUseCase {
       email: u.email,
       rol: u.rol,
       activo: u.activo,
+      eliminado: u.eliminado,
       fecha_creacion: u.fecha_creacion,
       fecha_actualizacion: u.fecha_actualizacion,
     }));

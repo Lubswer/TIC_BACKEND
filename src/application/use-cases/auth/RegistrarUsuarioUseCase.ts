@@ -19,7 +19,8 @@ export class RegistrarUsuarioUseCase {
       dto.email,
       passwordHash,
       dto.rol,
-      true 
+      true,
+      false
     );
 
 
@@ -31,6 +32,8 @@ export class RegistrarUsuarioUseCase {
       email: usuarioGuardado.email,
       rol: usuarioGuardado.rol,
       activo: usuarioGuardado.activo,
+      eliminado: usuarioGuardado.eliminado,
+      fecha_creacion: usuarioGuardado.fecha_creacion,
     };
   }
 }

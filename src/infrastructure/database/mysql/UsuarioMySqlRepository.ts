@@ -12,6 +12,7 @@ export class UsuarioMySqlRepository implements IUsuarioRepository {
       fila.password_hash,
       fila.rol as Rol,
       Boolean(fila.activo),
+      Boolean(fila.eliminado),
       fila.id,
       new Date(fila.fecha_creacion),
       new Date(fila.fecha_actualizacion)
@@ -20,7 +21,7 @@ export class UsuarioMySqlRepository implements IUsuarioRepository {
 
   async buscarPorEmail(email: string): Promise<Usuario | null> {
     const query = `
-      SELECT id, nombre, email, password_hash, rol, activo, fecha_creacion, fecha_actualizacion
+      SELECT id, nombre, email, password_hash, rol, activo, eliminado, fecha_creacion, fecha_actualizacion
       FROM usuario
       WHERE email = ?
       LIMIT 1
@@ -37,7 +38,7 @@ export class UsuarioMySqlRepository implements IUsuarioRepository {
 
   async buscarPorId(id: number): Promise<Usuario | null> {
     const query = `
-      SELECT id, nombre, email, password_hash, rol, activo, fecha_creacion, fecha_actualizacion
+      SELECT id, nombre, email, password_hash, rol, activo, eliminado, fecha_creacion, fecha_actualizacion
       FROM usuario
       WHERE id = ?
       LIMIT 1
@@ -54,8 +55,8 @@ export class UsuarioMySqlRepository implements IUsuarioRepository {
 
   async crear(usuario: Usuario): Promise<Usuario> {
     const query = `
-      INSERT INTO usuario (nombre, email, password_hash, rol, activo)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO usuario (nombre, email, password_hash, rol, activo, eliminado)
+      VALUES (?, ?, ?, ?, ?, ?)
     `;
 
     const [resultado] = await pool.execute<ResultSetHeader>(query, [
@@ -64,6 +65,7 @@ export class UsuarioMySqlRepository implements IUsuarioRepository {
       usuario.password_hash,
       usuario.rol,
       usuario.activo ? 1 : 0,
+      usuario.eliminado ? 1 : 0,
     ]);
 
     const usuarioCreado = await this.buscarPorId(resultado.insertId);
@@ -77,7 +79,7 @@ export class UsuarioMySqlRepository implements IUsuarioRepository {
 
     const query = `
       UPDATE usuario
-      SET nombre = ?, email = ?, password_hash = ?
+      SET nombre = ?, email = ?, password_hash = ?, activo = ?
       WHERE id = ?
     `;
 
@@ -85,6 +87,7 @@ export class UsuarioMySqlRepository implements IUsuarioRepository {
       usuario.nombre,
       usuario.email,
       usuario.password_hash,
+      usuario.activo ? 1 : 0,
       usuario.id,
     ]);
 
@@ -107,16 +110,34 @@ export class UsuarioMySqlRepository implements IUsuarioRepository {
     return resultado.affectedRows > 0;
   }
 
-  async listar(filtros: FiltrosUsuario = {}): Promise<Usuario[]> {
-    let query = `
-      SELECT id, nombre, email, password_hash, rol, activo, fecha_creacion, fecha_actualizacion
-      FROM usuario
+  async eliminarLogico(id: number): Promise<boolean> {
+    const query = `
+      UPDATE usuario
+      SET eliminado = 1, activo = 0
+      WHERE id = ?
     `;
 
+    const [resultado] = await pool.execute<ResultSetHeader>(query, [id]);
+    return resultado.affectedRows > 0;
+  }
+
+  async listar(filtros: FiltrosUsuario = {}): Promise<Usuario[]> {
+    let query = `
+      SELECT id, nombre, email, password_hash, rol, activo, eliminado, fecha_creacion, fecha_actualizacion
+      FROM usuario
+      WHERE 1=1
+    `;
+
+    if (filtros.soloEliminados === true) {
+      query += ` AND eliminado = 1 `;
+    } else if (!filtros.incluirEliminados) {
+      query += ` AND eliminado = 0 `;
+    }
+
     if (filtros.soloActivos === true) {
-      query += ` WHERE activo = 1 `;
+      query += ` AND activo = 1 `;
     } else if (filtros.soloInactivos === true) {
-      query += ` WHERE activo = 0 `;
+      query += ` AND activo = 0 `;
     }
 
     query += ` ORDER BY nombre ASC `;

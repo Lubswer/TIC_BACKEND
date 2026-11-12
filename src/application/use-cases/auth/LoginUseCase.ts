@@ -13,8 +13,12 @@ export class LoginUseCase {
       throw new Error('Credenciales incorrectas.');
     }
 
+    if (usuario.estaEliminado()) {
+      throw new Error('Esta cuenta ha sido dada de baja del sistema.');
+    }
+
     if (!usuario.estaHabilitado()) {
-      throw new Error('Tu cuenta está desactivada. Contacta al administrador.');
+      throw new Error('Tu cuenta se encuentra temporalmente inactiva o suspendida. Contacta al administrador.');
     }
 
     const passwordValida = await usuario.verificarPassword(dto.password);
@@ -42,6 +46,7 @@ export class LoginUseCase {
         email: usuario.email,
         rol: usuario.rol,
         activo: usuario.activo,
+        eliminado: usuario.eliminado,
       },
     };
   }

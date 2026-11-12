@@ -8,6 +8,7 @@ export class Usuario {
   password_hash: string;
   rol: Rol;
   activo: boolean;
+  eliminado: boolean;
   fecha_creacion?: Date;
   fecha_actualizacion?: Date;
 
@@ -17,6 +18,7 @@ export class Usuario {
     password_hash: string,
     rol: Rol,
     activo: boolean = true,
+    eliminado: boolean = false,
     id?: number,
     fecha_creacion?: Date,
     fecha_actualizacion?: Date
@@ -27,6 +29,7 @@ export class Usuario {
     this.password_hash = password_hash;
     this.rol = rol;
     this.activo = activo;
+    this.eliminado = eliminado;
     this.fecha_creacion = fecha_creacion;
     this.fecha_actualizacion = fecha_actualizacion;
   }
@@ -43,6 +46,10 @@ export class Usuario {
 
   
   estaHabilitado(): boolean {
-    return this.activo;
+    return !this.eliminado && this.activo;
+  }
+
+  estaEliminado(): boolean {
+    return this.eliminado;
   }
 }

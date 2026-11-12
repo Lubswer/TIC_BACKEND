@@ -18,7 +18,7 @@ export class EliminarUsuarioUseCase {
       throw new Error(`Usuario con ID ${id} no encontrado.`);
     }
 
-    return await this.usuarioRepository.cambiarEstadoActivo(id, false);
+    return await this.usuarioRepository.eliminarLogico(id);
   }
 }
 
