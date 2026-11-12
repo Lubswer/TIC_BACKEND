@@ -42,9 +42,10 @@ export class PedidoMySqlRepository implements IPedidoRepository {
           producto_id,
           cantidad,
           precio_unitario,
+          total,
           notas
         )
-        VALUES (?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?)
       `;
 
       const queryDescontarStock = `
@@ -64,6 +65,7 @@ export class PedidoMySqlRepository implements IPedidoRepository {
           linea.producto_id,
           linea.cantidad,
           linea.precio_unitario,
+          linea.total,
           linea.notas ?? null,
         ]);
 
@@ -108,7 +110,7 @@ export class PedidoMySqlRepository implements IPedidoRepository {
     const filaP = filasPedido[0];
 
     const queryLineas = `
-      SELECT pp.id, pp.pedido_id, pp.producto_id, pp.cantidad, pp.precio_unitario, pp.notas, pp.fecha_creacion, p.nombre AS nombre_producto
+      SELECT pp.id, pp.pedido_id, pp.producto_id, pp.cantidad, pp.precio_unitario, pp.total, pp.notas, pp.fecha_creacion, p.nombre AS nombre_producto
       FROM producto_pedido pp
       INNER JOIN producto p ON pp.producto_id = p.id
       WHERE pp.pedido_id = ?
@@ -124,6 +126,7 @@ export class PedidoMySqlRepository implements IPedidoRepository {
           Number(f.cantidad),
           Number(f.precio_unitario),
           f.notas,
+          Number(f.total),
           f.id,
           f.pedido_id,
           new Date(f.fecha_creacion),
@@ -164,7 +167,7 @@ export class PedidoMySqlRepository implements IPedidoRepository {
     const filaP = filasPedido[0];
 
     const queryLineas = `
-      SELECT pp.id, pp.pedido_id, pp.producto_id, pp.cantidad, pp.precio_unitario, pp.notas, pp.fecha_creacion, p.nombre AS nombre_producto
+      SELECT pp.id, pp.pedido_id, pp.producto_id, pp.cantidad, pp.precio_unitario, pp.total, pp.notas, pp.fecha_creacion, p.nombre AS nombre_producto
       FROM producto_pedido pp
       INNER JOIN producto p ON pp.producto_id = p.id
       WHERE pp.pedido_id = ?
@@ -180,6 +183,7 @@ export class PedidoMySqlRepository implements IPedidoRepository {
           Number(f.cantidad),
           Number(f.precio_unitario),
           f.notas,
+          Number(f.total),
           f.id,
           f.pedido_id,
           new Date(f.fecha_creacion),
@@ -221,7 +225,7 @@ export class PedidoMySqlRepository implements IPedidoRepository {
 
     for (const filaP of filasPedidos) {
       const queryLineas = `
-        SELECT pp.id, pp.pedido_id, pp.producto_id, pp.cantidad, pp.precio_unitario, pp.notas, pp.fecha_creacion, p.nombre AS nombre_producto
+        SELECT pp.id, pp.pedido_id, pp.producto_id, pp.cantidad, pp.precio_unitario, pp.total, pp.notas, pp.fecha_creacion, p.nombre AS nombre_producto
         FROM producto_pedido pp
         INNER JOIN producto p ON pp.producto_id = p.id
         WHERE pp.pedido_id = ?
@@ -237,6 +241,7 @@ export class PedidoMySqlRepository implements IPedidoRepository {
             Number(f.cantidad),
             Number(f.precio_unitario),
             f.notas,
+            Number(f.total),
             f.id,
             f.pedido_id,
             new Date(f.fecha_creacion),

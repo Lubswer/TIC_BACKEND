@@ -162,6 +162,7 @@ export class ConfirmarPedidoUseCase {
         nombre_producto: l.nombre_producto,
         cantidad: l.cantidad,
         precio_unitario: l.precio_unitario,
+        total: l.total,
         subtotal: l.calcularSubtotal(),
         notas: l.notas,
       })),

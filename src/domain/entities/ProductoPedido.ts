@@ -4,6 +4,7 @@ export class ProductoPedido {
   producto_id: number;
   cantidad: number;
   precio_unitario: number;
+  total: number;
   notas: string | null;
   fecha_creacion?: Date;
   nombre_producto?: string;
@@ -13,6 +14,7 @@ export class ProductoPedido {
     cantidad: number,
     precio_unitario: number,
     notas: string | null = null,
+    total?: number,
     id?: number,
     pedido_id?: number,
     fecha_creacion?: Date,
@@ -23,6 +25,7 @@ export class ProductoPedido {
     this.producto_id = producto_id;
     this.cantidad = cantidad;
     this.precio_unitario = precio_unitario;
+    this.total = total !== undefined ? total : this.calcularSubtotal();
     this.notas = notas;
     this.fecha_creacion = fecha_creacion;
     this.nombre_producto = nombre_producto;

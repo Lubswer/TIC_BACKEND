@@ -20,6 +20,7 @@ export interface LineaPedidoDetalleDTO {
   nombre_producto?: string;
   cantidad: number;
   precio_unitario: number;
+  total: number;
   subtotal: number;
   notas?: string | null;
 }
