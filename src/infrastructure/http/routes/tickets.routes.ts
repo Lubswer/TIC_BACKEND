@@ -6,13 +6,15 @@ import { TicketController } from '../controllers/TicketController.js';
 import { authMiddleware } from '../middlewares/authMiddleware.js';
 import { roleMiddleware } from '../middlewares/roleMiddleware.js';
 import { Rol } from '../../../domain/enums/Rol.js';
+import { SocketService } from '../../websocket/SocketService.js';
 
 const router = Router();
 
 const ticketRepository = new TicketMySqlRepository();
+const notificadorTiempoReal = new SocketService();
 
 const listarTicketsCocinaUseCase = new ListarTicketsCocinaUseCase(ticketRepository);
-const cambiarEstadoTicketUseCase = new CambiarEstadoTicketUseCase(ticketRepository);
+const cambiarEstadoTicketUseCase = new CambiarEstadoTicketUseCase(ticketRepository, notificadorTiempoReal);
 
 const ticketController = new TicketController(
   listarTicketsCocinaUseCase,

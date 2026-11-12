@@ -3,14 +3,14 @@ import { IProductoRepository } from '../../../domain/repositories/IProductoRepos
 import { Pedido } from '../../../domain/entities/Pedido.js';
 import { ProductoPedido } from '../../../domain/entities/ProductoPedido.js';
 import { CrearPedidoDTO, PedidoResumenDTO } from '../../dtos/pedido.dto.js';
-import { INotificadorCocina } from '../../services/INotificadorCocina.js';
+import { INotificadorTiempoReal } from '../../services/INotificadorTiempoReal.js';
 import { EstadoTicket } from '../../../domain/enums/EstadoTicket.js';
 
 export class ConfirmarPedidoUseCase {
   constructor(
     private pedidoRepository: IPedidoRepository,
     private productoRepository: IProductoRepository,
-    private notificadorCocina?: INotificadorCocina
+    private notificadorTiempoReal?: INotificadorTiempoReal
   ) {}
 
   async ejecutar(dto: CrearPedidoDTO): Promise<PedidoResumenDTO> {
@@ -28,6 +28,7 @@ export class ConfirmarPedidoUseCase {
 
     const lineasProducto: ProductoPedido[] = [];
     let acumuladorTotalProductos = 0;
+    const productosAgotados: Array<{ id: number; nombre: string }> = [];
 
     for (const item of dto.items) {
       if (!item.producto_id || item.producto_id <= 0) {
@@ -52,6 +53,10 @@ export class ConfirmarPedidoUseCase {
         throw new Error(
           `Stock insuficiente para "${producto.nombre}". Stock actual: ${producto.stock}, solicitado: ${item.cantidad}.`
         );
+      }
+
+      if (producto.stock !== null && producto.stock - item.cantidad <= 0) {
+        productosAgotados.push({ id: producto.id!, nombre: producto.nombre });
       }
 
       const precioUnitario = Number(producto.precio);
@@ -83,24 +88,45 @@ export class ConfirmarPedidoUseCase {
 
     const pedidoCreado = await this.pedidoRepository.crearConLineas(nuevoPedido, lineasProducto);
 
-    if (this.notificadorCocina && pedidoCreado.id && pedidoCreado.ticket_id) {
+    if (this.notificadorTiempoReal && pedidoCreado.id && pedidoCreado.ticket_id) {
       try {
-        this.notificadorCocina.notificarNuevoTicket({
+        this.notificadorTiempoReal.notificarNuevoTicket({
           ticket_id: pedidoCreado.ticket_id,
           pedido_id: pedidoCreado.id,
           estado: EstadoTicket.PENDIENTE,
-          notas_pedido: pedidoCreado.notas,
+          usuario_id: pedidoCreado.usuario_id,
+          tipo_pago: pedidoCreado.tipo_pago,
+          total_productos: pedidoCreado.total_productos,
+          total_extras: pedidoCreado.total_extras,
           descripcion_extras: pedidoCreado.descripcion_extras,
+          total: pedidoCreado.total,
+          notas_pedido: pedidoCreado.notas,
           fecha_creacion: pedidoCreado.fecha_creacion || new Date(),
           fecha_actualizacion: pedidoCreado.fecha_actualizacion || new Date(),
           items: (pedidoCreado.lineas || []).map((l) => ({
             producto: l.nombre_producto || `Producto #${l.producto_id}`,
             cantidad: l.cantidad,
+            precio_unitario: l.precio_unitario,
+            subtotal: l.calcularSubtotal(),
             notas: l.notas ?? null,
           })),
         });
       } catch (notifError) {
         console.error('Error no bloqueante al notificar a cocina:', notifError);
+      }
+    }
+
+    if (this.notificadorTiempoReal?.notificarCambioDisponibilidad && productosAgotados.length > 0) {
+      for (const prod of productosAgotados) {
+        try {
+          this.notificadorTiempoReal.notificarCambioDisponibilidad({
+            producto_id: prod.id,
+            disponible: false,
+            nombre: prod.nombre,
+          });
+        } catch (errorDisp) {
+          console.error(`Error no bloqueante al notificar disponibilidad de producto ${prod.id}:`, errorDisp);
+        }
       }
     }
 

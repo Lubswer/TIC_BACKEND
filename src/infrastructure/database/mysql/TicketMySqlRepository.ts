@@ -68,9 +68,15 @@ export class TicketMySqlRepository implements ITicketRepository {
         t.estado,
         t.fecha_creacion,
         t.fecha_actualizacion,
-        p.notas AS notas_pedido,
+        p.usuario_id,
+        p.tipo_pago,
+        p.total_productos,
+        p.total_extras,
         p.descripcion_extras,
+        p.total,
+        p.notas AS notas_pedido,
         pp.cantidad,
+        pp.precio_unitario,
         pp.notas AS notas_producto,
         prod.nombre AS nombre_producto
       FROM ticket t
@@ -110,9 +116,15 @@ export class TicketMySqlRepository implements ITicketRepository {
         t.estado,
         t.fecha_creacion,
         t.fecha_actualizacion,
-        p.notas AS notas_pedido,
+        p.usuario_id,
+        p.tipo_pago,
+        p.total_productos,
+        p.total_extras,
         p.descripcion_extras,
+        p.total,
+        p.notas AS notas_pedido,
         pp.cantidad,
+        pp.precio_unitario,
         pp.notas AS notas_producto,
         prod.nombre AS nombre_producto
       FROM ticket t
@@ -136,8 +148,13 @@ export class TicketMySqlRepository implements ITicketRepository {
           ticket_id: fila.ticket_id,
           pedido_id: fila.pedido_id,
           estado: fila.estado as EstadoTicket,
-          notas_pedido: fila.notas_pedido,
+          usuario_id: fila.usuario_id ? Number(fila.usuario_id) : undefined,
+          tipo_pago: fila.tipo_pago || undefined,
+          total_productos: fila.total_productos !== undefined ? Number(fila.total_productos) : undefined,
+          total_extras: fila.total_extras !== undefined ? Number(fila.total_extras) : undefined,
           descripcion_extras: fila.descripcion_extras,
+          total: fila.total !== undefined ? Number(fila.total) : undefined,
+          notas_pedido: fila.notas_pedido,
           fecha_creacion: new Date(fila.fecha_creacion),
           fecha_actualizacion: new Date(fila.fecha_actualizacion),
           items: [],
@@ -146,9 +163,15 @@ export class TicketMySqlRepository implements ITicketRepository {
 
       const ticket = mapaTickets.get(fila.ticket_id)!;
 
+      const cantidad = Number(fila.cantidad);
+      const precioUnitario = fila.precio_unitario !== undefined ? Number(fila.precio_unitario) : undefined;
+      const subtotal = precioUnitario !== undefined ? Number((precioUnitario * cantidad).toFixed(2)) : undefined;
+
       ticket.items.push({
         producto: fila.nombre_producto,
-        cantidad: Number(fila.cantidad),
+        cantidad,
+        precio_unitario: precioUnitario,
+        subtotal,
         notas: fila.notas_producto,
       });
     }

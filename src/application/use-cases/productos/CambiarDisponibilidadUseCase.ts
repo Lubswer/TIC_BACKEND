@@ -1,8 +1,12 @@
 import { IProductoRepository } from '../../../domain/repositories/IProductoRepository.js';
 import { ProductoResumenDTO } from '../../dtos/producto.dto.js';
+import { INotificadorTiempoReal } from '../../services/INotificadorTiempoReal.js';
 
 export class CambiarDisponibilidadUseCase {
-  constructor(private productoRepository: IProductoRepository) {}
+  constructor(
+    private productoRepository: IProductoRepository,
+    private notificadorTiempoReal?: INotificadorTiempoReal
+  ) {}
 
   async ejecutar(id: number, disponible: boolean): Promise<ProductoResumenDTO> {
     const producto = await this.productoRepository.buscarPorId(id);
@@ -13,6 +17,18 @@ export class CambiarDisponibilidadUseCase {
 
     await this.productoRepository.cambiarDisponibilidad(id, disponible);
     producto.disponible = disponible;
+
+    if (this.notificadorTiempoReal) {
+      try {
+        this.notificadorTiempoReal.notificarCambioDisponibilidad({
+          producto_id: producto.id!,
+          disponible: producto.disponible,
+          nombre: producto.nombre,
+        });
+      } catch (notifError) {
+        console.error('Error no bloqueante al notificar cambio de disponibilidad:', notifError);
+      }
+    }
 
     return {
       id: producto.id!,

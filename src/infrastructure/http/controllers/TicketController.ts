@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import { ListarTicketsCocinaUseCase } from '../../../application/use-cases/tickets/ListarTicketsCocinaUseCase.js';
 import { CambiarEstadoTicketUseCase } from '../../../application/use-cases/tickets/CambiarEstadoTicketUseCase.js';
 import { EstadoTicket } from '../../../domain/enums/EstadoTicket.js';
-import { SocketService } from '../../websocket/SocketService.js';
 
 export class TicketController {
   constructor(
@@ -38,13 +37,6 @@ export class TicketController {
       }
 
       const ticketActualizado = await this.cambiarEstadoTicketUseCase.ejecutar(id, nuevoEstado as EstadoTicket);
-
-      SocketService.emitirTicketActualizado({
-        ticket_id: ticketActualizado.id!,
-        pedido_id: ticketActualizado.pedido_id,
-        estado: ticketActualizado.estado,
-      });
-
       res.status(200).json(ticketActualizado);
     } catch (error: any) {
       res.status(400).json({ error: error.message || 'Error al cambiar el estado del ticket.' });

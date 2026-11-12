@@ -9,16 +9,18 @@ import { ProductoController } from '../controllers/ProductoController.js';
 import { authMiddleware } from '../middlewares/authMiddleware.js';
 import { roleMiddleware } from '../middlewares/roleMiddleware.js';
 import { Rol } from '../../../domain/enums/Rol.js';
+import { SocketService } from '../../websocket/SocketService.js';
 
 const productosRouter = Router();
 
 const productoRepository = new ProductoMySqlRepository();
+const notificadorTiempoReal = new SocketService();
 
 const crearProductoUseCase = new CrearProductoUseCase(productoRepository);
 const listarProductosUseCase = new ListarProductosUseCase(productoRepository);
 const actualizarProductoUseCase = new ActualizarProductoUseCase(productoRepository);
 const eliminarProductoUseCase = new EliminarProductoUseCase(productoRepository);
-const cambiarDisponibilidadUseCase = new CambiarDisponibilidadUseCase(productoRepository);
+const cambiarDisponibilidadUseCase = new CambiarDisponibilidadUseCase(productoRepository, notificadorTiempoReal);
 
 const productoController = new ProductoController(
   crearProductoUseCase,

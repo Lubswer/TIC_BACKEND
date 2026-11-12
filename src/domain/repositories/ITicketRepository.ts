@@ -4,6 +4,8 @@ import { EstadoTicket } from '../enums/EstadoTicket.js';
 export interface ItemTicketCocina {
   producto: string;
   cantidad: number;
+  precio_unitario?: number;
+  subtotal?: number;
   notas: string | null;
 }
 
@@ -11,8 +13,13 @@ export interface TicketCocina {
   ticket_id: number;
   pedido_id: number;
   estado: EstadoTicket;
-  notas_pedido: string | null;
+  usuario_id?: number;
+  tipo_pago?: string;
+  total_productos?: number;
+  total_extras?: number;
   descripcion_extras: string | null;
+  total?: number;
+  notas_pedido: string | null;
   fecha_creacion: Date;
   fecha_actualizacion: Date;
   items: ItemTicketCocina[];

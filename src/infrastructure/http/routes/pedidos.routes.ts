@@ -14,12 +14,12 @@ const router = Router();
 
 const pedidoRepository = new PedidoMySqlRepository();
 const productoRepository = new ProductoMySqlRepository();
-const notificadorCocina = new SocketService();
+const notificadorTiempoReal = new SocketService();
 
 const confirmarPedidoUseCase = new ConfirmarPedidoUseCase(
   pedidoRepository,
   productoRepository,
-  notificadorCocina
+  notificadorTiempoReal
 );
 const consultarDetallePedidoUseCase = new ConsultarDetallePedidoUseCase(pedidoRepository);
 const listarPedidosPorUsuarioUseCase = new ListarPedidosPorUsuarioUseCase(pedidoRepository);
