@@ -335,6 +335,7 @@ export class PedidoMySqlRepository implements IPedidoRepository {
     }
 
     const whereClause = condiciones.length > 0 ? `WHERE ${condiciones.join(' AND ')}` : '';
+    const limitClause = filtros.sinLimite ? '' : 'LIMIT ?';
 
     const query = `
       SELECT 
@@ -354,10 +355,12 @@ export class PedidoMySqlRepository implements IPedidoRepository {
       INNER JOIN usuario u ON p.usuario_id = u.id
       ${whereClause}
       ORDER BY p.fecha_creacion DESC
-      LIMIT ?
+      ${limitClause}
     `;
 
-    params.push(String(limite));
+    if (!filtros.sinLimite) {
+      params.push(String(limite));
+    }
 
     const [filas] = await pool.execute<RowDataPacket[]>(query, params);
 

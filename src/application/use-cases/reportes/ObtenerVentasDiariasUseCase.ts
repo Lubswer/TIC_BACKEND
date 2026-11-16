@@ -5,14 +5,14 @@ export class ObtenerVentasDiariasUseCase {
   constructor(private reporteRepository: IReporteRepository) {}
 
   async ejecutar(filtros: FiltroFechasDTO = {}): Promise<VentasDiariasDTO[]> {
-    let { fechaInicio, fechaFin } = filtros;
+    let { fechaInicio, fechaFin, ultimosDias } = filtros;
 
-    if (!fechaInicio && !fechaFin) {
+    if (!fechaInicio && !fechaFin && ultimosDias && ultimosDias > 0) {
       const hoy = new Date();
-      const haceSieteDias = new Date();
-      haceSieteDias.setDate(hoy.getDate() - 7);
+      const inicio = new Date();
+      inicio.setDate(hoy.getDate() - ultimosDias);
 
-      fechaInicio = haceSieteDias.toISOString().split('T')[0];
+      fechaInicio = inicio.toISOString().split('T')[0];
       fechaFin = hoy.toISOString().split('T')[0];
     }
 

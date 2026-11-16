@@ -2,6 +2,7 @@ export interface FiltroFechasDTO {
   fechaInicio?: string;
   fechaFin?: string;
   limite?: number;
+  ultimosDias?: number;
 }
 
 export interface TopProductoDTO {

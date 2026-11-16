@@ -3,6 +3,7 @@ import { ProductoPedido } from '../entities/ProductoPedido.js';
 
 export interface FiltrosPedido {
   limite?: number;
+  sinLimite?: boolean;
   soloExtras?: boolean;
   fechaInicio?: string;
   fechaFin?: string;
