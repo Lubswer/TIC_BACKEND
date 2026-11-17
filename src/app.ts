@@ -7,6 +7,7 @@ import pedidosRouter from './infrastructure/http/routes/pedidos.routes.js';
 import ticketsRouter from './infrastructure/http/routes/tickets.routes.js';
 import reportesRouter from './infrastructure/http/routes/reportes.routes.js';
 import incidenciasRouter from './infrastructure/http/routes/incidencias.routes.js';
+import prediccionesRouter from './infrastructure/http/routes/predicciones.routes.js';
 
 export const app = express();
 
@@ -28,6 +29,7 @@ app.use('/api/pedidos', pedidosRouter);
 app.use('/api/tickets', ticketsRouter);
 app.use('/api/reportes', reportesRouter);
 app.use('/api/incidencias', incidenciasRouter);
+app.use('/api/predicciones', prediccionesRouter);
 
 app.use((req: Request, res: Response) => {
   res.status(404).json({
