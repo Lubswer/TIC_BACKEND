@@ -139,9 +139,16 @@ export class ExcelReporteService {
   async exportarProductosVendidos(
     res: Response,
     datos: ItemVendidoDetalleDTO[],
-    filtros: { fechaInicio?: string; fechaFin?: string; categoria?: string }
+    filtros: {
+      fechaInicio?: string;
+      fechaFin?: string;
+      categoria?: string;
+      agruparPorFecha?: boolean;
+    }
   ): Promise<void> {
-    const extra = filtros.categoria ? `Categoría: ${filtros.categoria}` : 'Categoría: Todas';
+    const porFecha = Boolean(filtros.agruparPorFecha);
+    const extraCat = filtros.categoria ? `Categoría: ${filtros.categoria}` : 'Categoría: Todas';
+    const extra = porFecha ? `${extraCat} | Agrupado por fecha` : extraCat;
     const subtitulo = this.formatearSubtituloFechas(filtros.fechaInicio, filtros.fechaFin, extra);
     const { workbook, sheet, filaInicioTabla } = this.crearLibroYHoja(
       'Productos Vendidos',
@@ -149,21 +156,24 @@ export class ExcelReporteService {
       subtitulo
     );
 
-    this.configurarEncabezados(sheet, filaInicioTabla, [
+    const columnas = [
+      ...(porFecha ? [{ header: 'Fecha', key: 'fecha', width: 14 }] : []),
       { header: 'ID', key: 'producto_id', width: 10 },
       { header: 'Producto', key: 'nombre_producto', width: 32 },
       { header: 'Categoría', key: 'categoria', width: 16 },
       { header: 'Precio Actual', key: 'precio_unitario_actual', width: 16, numFmt: FORMATO_MONEDA },
       { header: 'Unidades Vendidas', key: 'cantidad_total', width: 20, numFmt: '#,##0' },
       { header: 'Total Recaudado', key: 'total_recaudado', width: 20, numFmt: FORMATO_MONEDA },
-    ]);
+    ];
+
+    this.configurarEncabezados(sheet, filaInicioTabla, columnas);
 
     let totalUnidades = 0;
     let totalRecaudado = 0;
 
     datos.forEach((item, idx) => {
       const fila = sheet.getRow(filaInicioTabla + 1 + idx);
-      fila.values = [
+      const valoresBase = [
         item.producto_id,
         item.nombre_producto,
         item.categoria,
@@ -171,12 +181,14 @@ export class ExcelReporteService {
         item.cantidad_total,
         item.total_recaudado,
       ];
+      fila.values = porFecha ? [item.fecha || '', ...valoresBase] : valoresBase;
       totalUnidades += item.cantidad_total;
       totalRecaudado += item.total_recaudado;
     });
 
     const filaTotal = sheet.getRow(filaInicioTabla + 1 + datos.length);
-    filaTotal.values = ['TOTAL', '', '', '', totalUnidades, Number(totalRecaudado.toFixed(2))];
+    const totalesBase = ['TOTAL', '', '', '', totalUnidades, Number(totalRecaudado.toFixed(2))];
+    filaTotal.values = porFecha ? ['TOTAL', '', '', '', '', totalUnidades, Number(totalRecaudado.toFixed(2))] : totalesBase;
     this.estilizarFilaTotales(filaTotal);
 
     await this.enviarLibro(res, workbook, 'reporte_productos_vendidos.xlsx');

@@ -18,6 +18,7 @@ export interface VentasDiariasDTO {
 }
 
 export interface ItemVendidoDetalleDTO {
+  fecha?: string;
   producto_id: number;
   nombre_producto: string;
   categoria: string;

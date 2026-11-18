@@ -62,6 +62,7 @@ export class ReporteController {
   obtenerProductosVendidos = async (req: Request, res: Response): Promise<void> => {
     try {
       const { productoId, categoria } = req.query;
+      const agruparPorFecha = req.query.agruparPorFecha === 'true';
       const { fechaInicio, fechaFin } = this.extraerRangoFechas(req.query);
 
       const resultado = await this.obtenerProductosVendidosUseCase.ejecutar({
@@ -69,6 +70,7 @@ export class ReporteController {
         fechaFin,
         productoId: productoId ? Number(productoId) : undefined,
         categoria: categoria ? String(categoria) : undefined,
+        agruparPorFecha,
       });
 
       res.status(200).json(resultado);
@@ -104,6 +106,7 @@ export class ReporteController {
   exportarProductosVendidosExcel = async (req: Request, res: Response): Promise<void> => {
     try {
       const { productoId, categoria } = req.query;
+      const agruparPorFecha = req.query.agruparPorFecha === 'true';
       const { fechaInicio, fechaFin } = this.extraerRangoFechas(req.query);
       const categoriaStr = categoria ? String(categoria) : undefined;
 
@@ -112,12 +115,14 @@ export class ReporteController {
         fechaFin,
         productoId: productoId ? Number(productoId) : undefined,
         categoria: categoriaStr,
+        agruparPorFecha,
       });
 
       await this.excelReporteService.exportarProductosVendidos(res, datos, {
         fechaInicio,
         fechaFin,
         categoria: categoriaStr,
+        agruparPorFecha,
       });
     } catch (error: any) {
       if (!res.headersSent) {

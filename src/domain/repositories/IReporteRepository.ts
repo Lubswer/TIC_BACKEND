@@ -8,6 +8,7 @@ import {
 export interface FiltrosReporteVentas extends FiltroFechasDTO {
   productoId?: number;
   categoria?: string;
+  agruparPorFecha?: boolean;
 }
 
 export interface IReporteRepository {

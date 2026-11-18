@@ -115,9 +115,19 @@ export class ReporteMySqlRepository implements IReporteRepository {
     }
 
     const whereClause = condiciones.length > 0 ? `WHERE ${condiciones.join(' AND ')}` : '';
+    const selectFecha = filtros.agruparPorFecha
+      ? "DATE_FORMAT(p.fecha_creacion, '%Y-%m-%d') AS fecha,"
+      : '';
+    const groupByClause = filtros.agruparPorFecha
+      ? "GROUP BY DATE_FORMAT(p.fecha_creacion, '%Y-%m-%d'), pp.producto_id, prod.nombre, prod.categoria, prod.precio"
+      : 'GROUP BY pp.producto_id, prod.nombre, prod.categoria, prod.precio';
+    const orderByClause = filtros.agruparPorFecha
+      ? 'ORDER BY fecha DESC, cantidad_total DESC'
+      : 'ORDER BY cantidad_total DESC';
 
     const query = `
       SELECT 
+        ${selectFecha}
         pp.producto_id,
         prod.nombre AS nombre_producto,
         prod.categoria,
@@ -128,13 +138,14 @@ export class ReporteMySqlRepository implements IReporteRepository {
       INNER JOIN pedido p ON pp.pedido_id = p.id
       INNER JOIN producto prod ON pp.producto_id = prod.id
       ${whereClause}
-      GROUP BY pp.producto_id, prod.nombre, prod.categoria, prod.precio
-      ORDER BY cantidad_total DESC
+      ${groupByClause}
+      ${orderByClause}
     `;
 
     const [filas] = await pool.execute<RowDataPacket[]>(query, params);
 
     return filas.map((fila) => ({
+      ...(filtros.agruparPorFecha && fila.fecha ? { fecha: String(fila.fecha) } : {}),
       producto_id: Number(fila.producto_id),
       nombre_producto: String(fila.nombre_producto),
       categoria: String(fila.categoria),
