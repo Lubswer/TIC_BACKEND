@@ -3,7 +3,6 @@ import { Rol } from '../../domain/enums/Rol.js';
 export interface RegistroUsuarioDTO {
   nombre: string;
   email: string;
-  password: string;
   rol: Rol;
 }
 
@@ -12,6 +11,12 @@ export interface ActualizarUsuarioDTO {
   email?: string;
   password?: string;
   activo?: boolean;
+}
+
+export interface ActualizarMiPerfilDTO {
+  nombre?: string;
+  passwordActual?: string;
+  nuevaPassword?: string;
 }
 
 export interface LoginDTO {

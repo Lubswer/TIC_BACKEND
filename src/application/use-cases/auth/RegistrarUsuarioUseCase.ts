@@ -1,28 +1,53 @@
+import crypto from 'node:crypto';
 import { IUsuarioRepository } from '../../../domain/repositories/IUsuarioRepository.js';
 import { Usuario } from '../../../domain/entities/Usuario.js';
 import { RegistroUsuarioDTO, UsuarioResumenDTO } from '../../dtos/auth.dto.js';
+import { IEmailService } from '../../services/IEmailService.js';
+
+const CARACTERES_PASSWORD = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
 
 export class RegistrarUsuarioUseCase {
-  constructor(private usuarioRepository: IUsuarioRepository) {}
+  constructor(
+    private usuarioRepository: IUsuarioRepository,
+    private emailService: IEmailService
+  ) {}
+
+  private generarPasswordTemporal(longitud: number = 10): string {
+    let resultado = '';
+    for (let i = 0; i < longitud; i++) {
+      const idx = crypto.randomInt(0, CARACTERES_PASSWORD.length);
+      resultado += CARACTERES_PASSWORD[idx];
+    }
+    return resultado;
+  }
 
   async ejecutar(dto: RegistroUsuarioDTO): Promise<UsuarioResumenDTO> {
+    const emailLimpio = dto.email.trim().toLowerCase();
+    const nombreLimpio = dto.nombre.trim();
 
-    const usuarioExistente = await this.usuarioRepository.buscarPorEmail(dto.email);
+    const usuarioExistente = await this.usuarioRepository.buscarPorEmail(emailLimpio);
     if (usuarioExistente) {
-      throw new Error(`El correo electrónico '${dto.email}' ya está registrado.`);
+      throw new Error(`El correo electrónico '${emailLimpio}' ya está registrado.`);
     }
 
-    const passwordHash = await Usuario.hashearPassword(dto.password);
+    const passwordTemporal = this.generarPasswordTemporal(10);
+    const passwordHash = await Usuario.hashearPassword(passwordTemporal);
+
+    await this.emailService.enviarBienvenidaConPassword({
+      nombre: nombreLimpio,
+      email: emailLimpio,
+      rol: dto.rol,
+      passwordTemporal,
+    });
 
     const nuevoUsuario = new Usuario(
-      dto.nombre,
-      dto.email,
+      nombreLimpio,
+      emailLimpio,
       passwordHash,
       dto.rol,
       true,
       false
     );
-
 
     const usuarioGuardado = await this.usuarioRepository.crear(nuevoUsuario);
 
