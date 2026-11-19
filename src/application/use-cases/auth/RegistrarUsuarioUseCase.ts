@@ -1,25 +1,13 @@
-import crypto from 'node:crypto';
 import { IUsuarioRepository } from '../../../domain/repositories/IUsuarioRepository.js';
 import { Usuario } from '../../../domain/entities/Usuario.js';
 import { RegistroUsuarioDTO, UsuarioResumenDTO } from '../../dtos/auth.dto.js';
 import { IEmailService } from '../../services/IEmailService.js';
-
-const CARACTERES_PASSWORD = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
 
 export class RegistrarUsuarioUseCase {
   constructor(
     private usuarioRepository: IUsuarioRepository,
     private emailService: IEmailService
   ) {}
-
-  private generarPasswordTemporal(longitud: number = 10): string {
-    let resultado = '';
-    for (let i = 0; i < longitud; i++) {
-      const idx = crypto.randomInt(0, CARACTERES_PASSWORD.length);
-      resultado += CARACTERES_PASSWORD[idx];
-    }
-    return resultado;
-  }
 
   async ejecutar(dto: RegistroUsuarioDTO): Promise<UsuarioResumenDTO> {
     const emailLimpio = dto.email.trim().toLowerCase();
@@ -30,7 +18,7 @@ export class RegistrarUsuarioUseCase {
       throw new Error(`El correo electrónico '${emailLimpio}' ya está registrado.`);
     }
 
-    const passwordTemporal = this.generarPasswordTemporal(10);
+    const passwordTemporal = Usuario.generarPasswordTemporal(10);
     const passwordHash = await Usuario.hashearPassword(passwordTemporal);
 
     await this.emailService.enviarBienvenidaConPassword({

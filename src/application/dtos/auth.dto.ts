@@ -19,6 +19,10 @@ export interface ActualizarMiPerfilDTO {
   nuevaPassword?: string;
 }
 
+export interface OlvidePasswordDTO {
+  email: string;
+}
+
 export interface LoginDTO {
   email: string;
   password: string;

@@ -1,5 +1,8 @@
+import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import { Rol } from '../enums/Rol.js';
+
+const CARACTERES_PASSWORD = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
 
 export class Usuario {
   id?: number;
@@ -32,6 +35,15 @@ export class Usuario {
     this.eliminado = eliminado;
     this.fecha_creacion = fecha_creacion;
     this.fecha_actualizacion = fecha_actualizacion;
+  }
+
+  static generarPasswordTemporal(longitud: number = 10): string {
+    let resultado = '';
+    for (let i = 0; i < longitud; i++) {
+      const idx = crypto.randomInt(0, CARACTERES_PASSWORD.length);
+      resultado += CARACTERES_PASSWORD[idx];
+    }
+    return resultado;
   }
 
   static async hashearPassword(passwordPlano: string): Promise<string> {

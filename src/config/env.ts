@@ -12,5 +12,6 @@ export const ENV = {
   JWT_SECRET: process.env.JWT_SECRET || 'ciocolatto_secret_key_2026',
   PREDICCION_API_URL: process.env.PREDICCION_API_URL || 'http://localhost:8000',
   EMAIL_USER: process.env.EMAIL_USER || '',
-  EMAIL_APP_PASSWORD: process.env.EMAIL_APP_PASSWORD || ''
+  EMAIL_APP_PASSWORD: process.env.EMAIL_APP_PASSWORD || '',
+  APP_URL: process.env.APP_URL || 'http://localhost:3000'
 };
